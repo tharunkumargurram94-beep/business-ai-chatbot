@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Vamadeva Admin Login</title>
+
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+
+body {
+
+    margin: 0;
+
+    min-height: 100vh;
+
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background:
+        linear-gradient(
+            135deg,
+            #eef5ff,
+            #f8fbff
+        );
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    color: #172033;
+
+}
+
+
+/* ======================================================
+   LOGIN CARD
+====================================================== */
+
+.login-card {
+
+    width: 100%;
+
+    max-width: 420px;
+
+    background: white;
+
+    border-radius: 18px;
+
+    padding: 35px;
+
+    box-shadow:
+        0 15px 45px
+        rgba(25,45,80,.12);
+
+    border:
+        1px solid #e5ebf5;
+
+}
+
+
+/* ======================================================
+   LOGO
+====================================================== */
+
+.logo-wrapper {
+
+    display: flex;
+
+    justify-content: center;
+
+    margin-bottom: 18px;
+
+}
+
+
+.logo {
+
+    width: 76px;
+
+    height: 76px;
+
+    background: white;
+
+    border-radius: 16px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    overflow: hidden;
+
+    border:
+        1px solid #e3e9f2;
+
+    box-shadow:
+        0 5px 15px
+        rgba(0,0,0,.06);
+
+}
+
+
+.logo img {
+
+    width: 100%;
+
+    height: 100%;
+
+    object-fit: contain;
+
+    padding: 5px;
+
+}
+
+
+/* ======================================================
+   TEXT
+====================================================== */
+
+.title {
+
+    text-align: center;
+
+    font-size: 24px;
+
+    font-weight: 700;
+
+    color: #0757c9;
+
+}
+
+
+.subtitle {
+
+    text-align: center;
+
+    color: #718096;
+
+    font-size: 13px;
+
+    margin-top: 6px;
+
+    margin-bottom: 28px;
+
+}
+
+
+/* ======================================================
+   FORM
+====================================================== */
+
+label {
+
+    display: block;
+
+    font-size: 13px;
+
+    font-weight: 600;
+
+    margin-bottom: 7px;
+
+}
+
+
+.input-group {
+
+    margin-bottom: 18px;
+
+}
+
+
+input {
+
+    width: 100%;
+
+    padding: 13px 14px;
+
+    border:
+        1px solid #d7dfeb;
+
+    border-radius: 9px;
+
+    outline: none;
+
+    font-size: 14px;
+
+}
+
+
+input:focus {
+
+    border-color: #1478e8;
+
+    box-shadow:
+        0 0 0 3px
+        rgba(20,120,232,.08);
+
+}
+
+
+/* ======================================================
+   LOGIN BUTTON
+====================================================== */
+
+.login-button {
+
+    width: 100%;
+
+    padding: 13px;
+
+    border: none;
+
+    border-radius: 9px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #0757c9,
+            #0b7bea
+        );
+
+    color: white;
+
+    font-size: 15px;
+
+    font-weight: 700;
+
+    cursor: pointer;
+
+}
+
+
+.login-button:hover {
+
+    opacity: .93;
+
+}
+
+
+.login-button:disabled {
+
+    opacity: .6;
+
+    cursor: not-allowed;
+
+}
+
+
+/* ======================================================
+   MESSAGE
+====================================================== */
+
+.message {
+
+    display: none;
+
+    margin-top: 15px;
+
+    padding: 11px;
+
+    border-radius: 8px;
+
+    font-size: 13px;
+
+    text-align: center;
+
+}
+
+
+.message.error {
+
+    display: block;
+
+    background: #fff0f0;
+
+    color: #c53030;
+
+    border:
+        1px solid #ffd0d0;
+
+}
+
+
+.message.success {
+
+    display: block;
+
+    background: #effcf4;
+
+    color: #237a45;
+
+    border:
+        1px solid #ccefd9;
+
+}
+
+
+/* ======================================================
+   FOOTER
+====================================================== */
+
+.footer {
+
+    text-align: center;
+
+    margin-top: 22px;
+
+    color: #9aa5b5;
+
+    font-size: 11px;
+
+}
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="login-card">
+
+
+    <div class="logo-wrapper">
+
+        <div class="logo">
+
+            <img
+                src="vamadeva-logo.jpg"
+                alt="Vamadeva Techno Solutions"
+            >
+
+        </div>
+
+    </div>
+
+
+    <div class="title">
+
+        Vamadeva Admin
+
+    </div>
+
+
+    <div class="subtitle">
+
+        Sign in to access the dashboard
+
+    </div>
+
+
+
+    <form
+        id="loginForm"
+        onsubmit="login(event)"
+    >
+
+
+        <div class="input-group">
+
+            <label for="username">
+
+                Username
+
+            </label>
+
+            <input
+                id="username"
+                type="text"
+                autocomplete="username"
+                placeholder="Enter username"
+                required
+            >
+
+        </div>
+
+
+
+        <div class="input-group">
+
+            <label for="password">
+
+                Password
+
+            </label>
+
+            <input
+                id="password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="Enter password"
+                required
+            >
+
+        </div>
+
+
+
+        <button
+            id="loginButton"
+            class="login-button"
+            type="submit"
+        >
+
+            Login
+
+        </button>
+
+
+    </form>
+
+
+
+    <div
+        id="message"
+        class="message">
+
+    </div>
+
+
+    <div class="footer">
+
+        Vamadeva Techno Solutions
+
+    </div>
+
+
+</div>
+
+
+
+<script>
+
+
+async function login(event) {
+
+    event.preventDefault();
+
+
+    const username =
+        document.getElementById(
+            "username"
+        ).value.trim();
+
+
+    const password =
+        document.getElementById(
+            "password"
+        ).value;
+
+
+    const button =
+        document.getElementById(
+            "loginButton"
+        );
+
+
+    const message =
+        document.getElementById(
+            "message"
+        );
+
+
+    button.disabled = true;
+
+    button.textContent =
+        "Signing in...";
+
+
+    message.className =
+        "message";
+
+    message.textContent =
+        "";
+
+
+    try {
+
+
+        const response =
+            await fetch(
+                "/admin/login",
+                {
+
+                    method: "POST",
+
+                    headers: {
+                        "Content-Type":
+                            "application/json"
+                    },
+
+                    credentials: "same-origin",
+
+                    body: JSON.stringify({
+
+                        username:
+                            username,
+
+                        password:
+                            password
+
+                    })
+
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            response.ok &&
+            data.success
+        ) {
+
+
+            message.className =
+                "message success";
+
+
+            message.textContent =
+                "Login successful. Opening dashboard...";
+
+
+            setTimeout(
+                function() {
+
+                    window.location.href =
+                        "/admin";
+
+                },
+                400
+            );
+
+
+            return;
+
+        }
+
+
+        message.className =
+            "message error";
+
+
+        message.textContent =
+            data.message ||
+            "Invalid username or password.";
+
+
+    }
+
+    catch (error) {
+
+
+        console.error(
+            error
+        );
+
+
+        message.className =
+            "message error";
+
+
+        message.textContent =
+            "Unable to connect to the server.";
+
+    }
+
+
+    button.disabled = false;
+
+    button.textContent =
+        "Login";
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,6040 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Vamadeva Admin Dashboard</title>
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+
+            min-height: 100vh;
+
+            font-family:
+                "Segoe UI",
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            color: #14213d;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #eef5ff 0%,
+                    #f6f4ff 45%,
+                    #f8fbff 100%
+                );
+
+            overflow-x: hidden;
+        }
+
+        button,
+        input,
+        select {
+            font-family: inherit;
+        }
+
+        /* =========================================================
+           APP
+           ========================================================= */
+
+        .app {
+            min-height: 100vh;
+            display: flex;
+        }
+
+        /* =========================================================
+           SIDEBAR
+           ========================================================= */
+
+        .sidebar {
+
+            position: fixed;
+
+            top: 0;
+            left: 0;
+            bottom: 0;
+
+            width: 215px;
+
+            z-index: 100;
+
+            display: flex;
+            flex-direction: column;
+
+            background:
+                linear-gradient(
+                    180deg,
+                    #073b91 0%,
+                    #155dcc 38%,
+                    #4e42d7 72%,
+                    #7746df 100%
+                );
+
+            color: white;
+
+            box-shadow:
+                8px 0 30px
+                rgba(28,54,112,0.18);
+        }
+
+        .sidebar-brand {
+
+            padding:
+                24px 17px 20px;
+
+            text-align: center;
+
+            border-bottom:
+                1px solid
+                rgba(255,255,255,0.14);
+        }
+
+        .sidebar-logo {
+
+            width: 72px;
+            height: 72px;
+
+            object-fit: contain;
+
+            background: white;
+
+            padding: 5px;
+
+            border-radius: 18px;
+
+            box-shadow:
+                0 8px 22px
+                rgba(0,0,0,0.22);
+        }
+
+        .brand-name {
+
+            margin-top: 10px;
+
+            font-size: 21px;
+
+            font-weight: 900;
+
+            letter-spacing: 0.3px;
+        }
+
+        .brand-tagline {
+
+            margin-top: 3px;
+
+            font-size: 8px;
+
+            color:
+                rgba(255,255,255,0.78);
+
+            letter-spacing: 0.3px;
+        }
+
+        .sidebar-nav {
+
+            padding:
+                20px 12px;
+
+            display: flex;
+            flex-direction: column;
+
+            gap: 6px;
+        }
+
+        .nav-item {
+
+            width: 100%;
+            min-height: 43px;
+
+            padding:
+                0 13px;
+
+            display: flex;
+            align-items: center;
+
+            gap: 12px;
+
+            border: none;
+            border-radius: 12px;
+
+            background:
+                transparent;
+
+            color:
+                rgba(255,255,255,0.82);
+
+            font-size: 11px;
+            font-weight: 700;
+
+            text-align: left;
+
+            cursor: pointer;
+
+            transition:
+                0.2s ease;
+        }
+
+        .nav-item:hover {
+
+            background:
+                rgba(255,255,255,0.12);
+
+            color: white;
+
+            transform:
+                translateX(2px);
+        }
+
+        .nav-item.active {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #1684ff,
+                    #2570e9
+                );
+
+            color: white;
+
+            box-shadow:
+                0 7px 20px
+                rgba(0,0,0,0.16);
+        }
+
+        .nav-icon {
+
+            width: 25px;
+            height: 25px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 16px;
+        }
+
+        .sidebar-bottom {
+
+            margin-top: auto;
+
+            padding:
+                16px 13px 20px;
+
+            text-align: center;
+        }
+
+        .sidebar-illustration {
+
+            width: 100%;
+            height: 120px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 72px;
+
+            opacity: 0.92;
+        }
+
+        .sidebar-quote {
+
+            margin-top: 8px;
+
+            color:
+                rgba(255,255,255,0.88);
+
+            font-size: 12px;
+
+            line-height: 1.7;
+
+            font-weight: 600;
+        }
+
+        .sidebar-author {
+
+            margin-top: 8px;
+
+            color:
+                rgba(255,255,255,0.68);
+
+            font-size: 9px;
+        }
+
+        /* =========================================================
+           MAIN
+           ========================================================= */
+
+        .main {
+
+            width:
+                calc(100% - 215px);
+
+            margin-left: 215px;
+
+            min-height: 100vh;
+        }
+
+        /* =========================================================
+           HEADER
+           ========================================================= */
+
+        .top-header {
+
+            min-height: 74px;
+
+            padding:
+                12px 25px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            gap: 20px;
+
+            background:
+                rgba(255,255,255,0.92);
+
+            border-bottom:
+                1px solid #e4ebf5;
+
+            box-shadow:
+                0 3px 18px
+                rgba(39,74,135,0.06);
+
+            backdrop-filter:
+                blur(14px);
+
+            position: sticky;
+
+            top: 0;
+
+            z-index: 80;
+        }
+
+        .top-left {
+
+            display: flex;
+            align-items: center;
+
+            gap: 12px;
+        }
+
+        .menu-icon {
+
+            font-size: 24px;
+
+            color: #173b79;
+        }
+
+        .header-title {
+
+            font-size: 21px;
+
+            font-weight: 850;
+
+            color: #102c5d;
+        }
+
+        .header-subtitle {
+
+            margin-top: 2px;
+
+            font-size: 10px;
+
+            color: #73829a;
+        }
+
+        .top-right {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 9px;
+        }
+
+        .header-message {
+
+            margin-right: 8px;
+
+            padding:
+                9px 14px;
+
+            border-radius: 20px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #edf4ff,
+                    #f2efff
+                );
+
+            color: #47608c;
+
+            font-size: 9px;
+
+            font-weight: 700;
+        }
+
+        .header-btn {
+
+            height: 39px;
+
+            padding:
+                0 15px;
+
+            display: inline-flex;
+
+            align-items: center;
+            justify-content: center;
+
+            gap: 6px;
+
+            border-radius: 10px;
+
+            font-size: 10px;
+
+            font-weight: 750;
+
+            cursor: pointer;
+
+            transition:
+                0.2s ease;
+        }
+
+        .chatbot-btn {
+
+            border: none;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #1785ff,
+                    #2b63df
+                );
+
+            box-shadow:
+                0 5px 14px
+                rgba(23,133,255,0.22);
+        }
+
+        .refresh-btn {
+
+            color: #2163c4;
+
+            background: white;
+
+            border:
+                1px solid #8bb3ec;
+        }
+
+        .logout-btn {
+
+            color: white;
+
+            border: none;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ff4b63,
+                    #e62e42
+                );
+
+            box-shadow:
+                0 5px 14px
+                rgba(230,46,66,0.20);
+        }
+
+        .header-btn:hover {
+
+            transform:
+                translateY(-2px);
+        }
+
+        .header-btn:disabled {
+
+            opacity: 0.65;
+
+            cursor: wait;
+
+            transform: none;
+        }
+
+        /* =========================================================
+           CONTENT
+           ========================================================= */
+
+        .content {
+
+            padding:
+                22px 20px 30px;
+        }
+
+        .overview-row {
+
+            margin-bottom: 15px;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .overview-title {
+
+            color: #102c5d;
+
+            font-size: 17px;
+
+            font-weight: 850;
+        }
+
+        .overview-text {
+
+            margin-top: 3px;
+
+            color: #7a899e;
+
+            font-size: 9px;
+        }
+
+        .active-status {
+
+            display: flex;
+            align-items: center;
+
+            gap: 7px;
+
+            padding:
+                8px 12px;
+
+            border-radius: 20px;
+
+            background: white;
+
+            border:
+                1px solid #dce7f5;
+
+            color: #55708f;
+
+            font-size: 9px;
+
+            font-weight: 700;
+
+            box-shadow:
+                0 4px 15px
+                rgba(32,71,127,0.06);
+        }
+
+        .status-dot {
+
+            width: 8px;
+            height: 8px;
+
+            border-radius: 50%;
+
+            background: #32d583;
+
+            box-shadow:
+                0 0 0 4px
+                rgba(50,213,131,0.13);
+        }
+
+        /* =========================================================
+           STATS
+           ========================================================= */
+
+        .stats-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(4,1fr);
+
+            gap: 14px;
+
+            margin-bottom: 16px;
+        }
+
+        .stat-card {
+
+            position: relative;
+
+            min-height: 125px;
+
+            overflow: hidden;
+
+            padding: 17px;
+
+            border-radius: 15px;
+
+            color: white;
+
+            box-shadow:
+                0 10px 25px
+                rgba(37,77,147,0.16);
+        }
+
+        .stat-card::after {
+
+            content: "";
+
+            position: absolute;
+
+            width: 100px;
+            height: 100px;
+
+            right: -18px;
+            bottom: -35px;
+
+            border-radius: 50%;
+
+            background:
+                rgba(255,255,255,0.14);
+        }
+
+        .stat-blue {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #2673ee,
+                    #38b7ed
+                );
+        }
+
+        .stat-green {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #18b981,
+                    #5ce8a4
+                );
+        }
+
+        .stat-orange {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ffad1c,
+                    #ffbf68
+                );
+        }
+
+        .stat-pink {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #e63c92,
+                    #a648e9
+                );
+        }
+
+        .stat-content {
+
+            position: relative;
+
+            z-index: 2;
+        }
+
+        .stat-icon {
+
+            width: 43px;
+            height: 43px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 12px;
+
+            background:
+                rgba(0,0,0,0.13);
+
+            font-size: 20px;
+        }
+
+        .stat-label {
+
+            margin-top: 9px;
+
+            font-size: 10px;
+
+            font-weight: 700;
+
+            opacity: 0.92;
+        }
+
+        .stat-number {
+
+            margin-top: 1px;
+
+            font-size: 29px;
+
+            font-weight: 900;
+
+            line-height: 1.1;
+        }
+
+        .stat-description {
+
+            margin-top: 5px;
+
+            font-size: 8px;
+
+            opacity: 0.80;
+        }
+
+        /* =========================================================
+           ANALYTICS
+           ========================================================= */
+
+        .analytics-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                1.05fr
+                1fr
+                1.05fr;
+
+            gap: 14px;
+
+            margin-bottom: 15px;
+        }
+
+        .analytics-card {
+
+            min-height: 250px;
+
+            padding:
+                15px 16px;
+
+            border:
+                1px solid #e5ebf4;
+
+            border-radius: 15px;
+
+            background:
+                rgba(255,255,255,0.97);
+
+            box-shadow:
+                0 9px 25px
+                rgba(35,71,130,0.08);
+        }
+
+        .analytics-card-header {
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            margin-bottom: 8px;
+        }
+
+        .analytics-title-wrap {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+        }
+
+        .analytics-icon {
+
+            width: 31px;
+            height: 31px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 9px;
+
+            font-size: 16px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #edf5ff,
+                    #f5efff
+                );
+        }
+
+        .analytics-title {
+
+            color: #163867;
+
+            font-size: 12px;
+
+            font-weight: 850;
+        }
+
+        .analytics-description {
+
+            margin-top: 2px;
+
+            color: #8b98aa;
+
+            font-size: 8px;
+        }
+
+        .analytics-badge {
+
+            padding:
+                6px 9px;
+
+            border-radius: 15px;
+
+            background:
+                #f1f6ff;
+
+            color: #2866c6;
+
+            font-size: 8px;
+
+            font-weight: 800;
+        }
+
+        canvas {
+
+            width: 100% !important;
+
+            height: 185px !important;
+        }
+
+        /* =========================================================
+           LOWER GRID
+           ========================================================= */
+
+        .lower-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                340px
+                minmax(0,1fr);
+
+            gap: 15px;
+
+            align-items: start;
+        }
+
+        .card {
+
+            overflow: hidden;
+
+            border:
+                1px solid #e2e9f3;
+
+            border-radius: 15px;
+
+            background:
+                rgba(255,255,255,0.97);
+
+            box-shadow:
+                0 9px 25px
+                rgba(35,71,130,0.08);
+        }
+
+        .card-header {
+
+            min-height: 52px;
+
+            padding:
+                0 16px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+
+            border-bottom:
+                1px solid #e9eef5;
+        }
+
+        .card-title {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            color: #173866;
+
+            font-size: 13px;
+
+            font-weight: 850;
+        }
+
+        .card-title-icon {
+
+            font-size: 17px;
+        }
+
+        /* =========================================================
+           CALENDAR
+           ========================================================= */
+
+        .calendar-controls {
+
+            padding:
+                12px 13px 8px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: space-between;
+        }
+
+        .month-btn {
+
+            width: 31px;
+            height: 31px;
+
+            border:
+                1px solid #dce6f3;
+
+            border-radius: 9px;
+
+            background: white;
+
+            color: #2765c7;
+
+            font-size: 17px;
+
+            font-weight: 800;
+
+            cursor: pointer;
+        }
+
+        .month-btn:hover {
+
+            background:
+                #edf5ff;
+        }
+
+        .month-title {
+
+            color: #193b70;
+
+            font-size: 12px;
+
+            font-weight: 850;
+        }
+
+        .calendar {
+
+            padding:
+                0 11px 8px;
+        }
+
+        .weekdays {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(7,1fr);
+
+            margin-bottom: 3px;
+        }
+
+        .weekday {
+
+            padding:
+                4px 0;
+
+            text-align: center;
+
+            color: #8290a5;
+
+            font-size: 8px;
+
+            font-weight: 800;
+        }
+
+        .calendar-days {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(7,1fr);
+
+            gap: 4px;
+        }
+
+        .day {
+
+            min-height: 43px;
+
+            padding: 5px;
+
+            border:
+                1px solid #e6edf5;
+
+            border-radius: 8px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #ffffff,
+                    #f8fbff
+                );
+
+            cursor: pointer;
+
+            transition:
+                0.16s ease;
+
+            position: relative;
+        }
+
+        .day:hover {
+
+            border-color:
+                #72a2e8;
+
+            background:
+                #f1f7ff;
+
+            transform:
+                translateY(-1px);
+        }
+
+        .day.empty {
+
+            border: none;
+
+            background:
+                transparent;
+
+            pointer-events: none;
+        }
+
+        .day.today {
+
+            border:
+                2px solid #8e73e9;
+
+            background:
+                #f4f0ff;
+        }
+
+        /* =========================================================
+           MULTI DATE SELECTED
+           ========================================================= */
+
+        .day.selected {
+
+            border:
+                2px solid #246fe8 !important;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #dfeeff,
+                    #eee7ff
+                ) !important;
+
+            box-shadow:
+                0 5px 12px
+                rgba(45,105,221,0.16);
+
+            transform:
+                translateY(-1px);
+        }
+
+        .day.selected::after {
+
+            content: "✓";
+
+            position: absolute;
+
+            top: 3px;
+            right: 4px;
+
+            width: 15px;
+            height: 15px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #2478ef,
+                    #6844df
+                );
+
+            font-size: 8px;
+
+            font-weight: 900;
+        }
+
+        .day-number {
+
+            color: #2b405f;
+
+            font-size: 9px;
+
+            font-weight: 800;
+        }
+
+        .day.selected .day-number {
+
+            color:
+                #174e9d;
+
+            font-weight: 900;
+        }
+
+        .day-count {
+
+            width: 18px;
+            height: 18px;
+
+            margin-top: 2px;
+
+            display: flex;
+
+            align-items: center;
+            justify-content: center;
+
+            border-radius: 50%;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #2479ef,
+                    #5c46d8
+                );
+
+            font-size: 8px;
+
+            font-weight: 850;
+        }
+
+        .day.selected .day-count {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #ef477f,
+                    #6844df
+                );
+        }
+
+        /* =========================================================
+           SELECTION INFO
+           ========================================================= */
+
+        .selection-info {
+
+            margin:
+                0 13px 8px;
+
+            padding:
+                9px 10px;
+
+            border-radius: 9px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #edf6ff,
+                    #f1efff
+                );
+
+            color: #27589f;
+
+            font-size: 9px;
+
+            font-weight: 750;
+
+            line-height: 1.5;
+        }
+
+        .selection-info.has-selection {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #e4f0ff,
+                    #eee8ff
+                );
+
+            color:
+                #214f9a;
+        }
+
+        .selection-dates {
+
+            margin-top: 3px;
+
+            color: #74849a;
+
+            font-size: 8px;
+
+            font-weight: 600;
+
+            max-height: 40px;
+
+            overflow-y: auto;
+        }
+
+        /* =========================================================
+           CALENDAR BUTTONS
+           ========================================================= */
+
+        .calendar-actions {
+
+            padding:
+                0 13px 13px;
+
+            display: grid;
+
+            grid-template-columns:
+                1fr 1fr;
+
+            gap: 7px;
+        }
+
+        .calendar-action-btn {
+
+            height: 37px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 5px;
+
+            border: none;
+
+            border-radius: 8px;
+
+            font-size: 9px;
+
+            font-weight: 800;
+
+            cursor: pointer;
+
+            transition:
+                0.18s ease;
+        }
+
+        .calendar-action-btn:hover {
+
+            transform:
+                translateY(-1px);
+        }
+
+        .clear-dates-btn {
+
+            color:
+                #4d6381;
+
+            background:
+                #edf2f8;
+
+            border:
+                1px solid #dce5f0;
+        }
+
+        .export-dates-btn {
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #2377ee,
+                    #6844df
+                );
+
+            box-shadow:
+                0 5px 13px
+                rgba(58,98,213,0.18);
+        }
+
+        .export-dates-btn:disabled {
+
+            opacity: 0.45;
+
+            cursor: not-allowed;
+
+            transform: none;
+        }
+
+        /* =========================================================
+           TOOLBAR
+           ========================================================= */
+
+        .toolbar {
+
+            padding:
+                10px 12px;
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 7px;
+
+            border-bottom:
+                1px solid #edf1f6;
+
+            background:
+                #fbfcff;
+        }
+
+        .search-wrapper {
+
+            position: relative;
+
+            flex: 1;
+        }
+
+        .search-icon {
+
+            position: absolute;
+
+            left: 10px;
+
+            top: 50%;
+
+            transform:
+                translateY(-50%);
+
+            color: #7c8ca2;
+
+            font-size: 11px;
+        }
+
+        .search-input {
+
+            width: 100%;
+
+            height: 36px;
+
+            padding:
+                0 9px 0 29px;
+
+            border:
+                1px solid #d9e3f0;
+
+            border-radius: 8px;
+
+            outline: none;
+
+            color: #304763;
+
+            background: white;
+
+            font-size: 10px;
+        }
+
+        .search-input:focus {
+
+            border-color:
+                #6f9ee4;
+
+            box-shadow:
+                0 0 0 3px
+                rgba(54,115,220,0.07);
+        }
+
+        .course-filter {
+
+            min-width: 145px;
+
+            height: 36px;
+
+            padding:
+                0 9px;
+
+            border:
+                1px solid #d9e3f0;
+
+            border-radius: 8px;
+
+            outline: none;
+
+            background: white;
+
+            color: #304763;
+
+            font-size: 10px;
+        }
+
+        .action-btn {
+
+            height: 36px;
+
+            padding:
+                0 12px;
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 5px;
+
+            border: none;
+
+            border-radius: 8px;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #2377ee,
+                    #4162d8
+                );
+
+            font-size: 9px;
+
+            font-weight: 750;
+
+            cursor: pointer;
+
+            white-space: nowrap;
+        }
+
+        .action-btn:hover {
+
+            transform:
+                translateY(-1px);
+        }
+
+        .action-btn.secondary {
+
+            color: #3e5a7e;
+
+            background:
+                #eef3fa;
+
+            border:
+                1px solid #e0e7f0;
+        }
+
+        .full-width {
+
+            width: 100%;
+        }
+
+        /* =========================================================
+           TABLE
+           ========================================================= */
+
+        .table-wrapper {
+
+            width: 100%;
+
+            overflow-x: auto;
+        }
+
+        table {
+
+            width: 100%;
+
+            min-width: 1050px;
+
+            border-collapse: collapse;
+
+            font-size: 9px;
+        }
+
+        th {
+
+            padding:
+                10px 8px;
+
+            text-align: left;
+
+            white-space: nowrap;
+
+            background:
+                #f6f9fd;
+
+            color: #73839a;
+
+            border-bottom:
+                1px solid #e4eaf3;
+
+            font-size: 8px;
+
+            font-weight: 850;
+
+            text-transform: uppercase;
+        }
+
+        td {
+
+            padding:
+                10px 8px;
+
+            color: #465a75;
+
+            border-bottom:
+                1px solid #edf1f6;
+
+            vertical-align: top;
+        }
+
+        tbody tr:hover {
+
+            background:
+                #f8fbff;
+        }
+
+        .lead-name {
+
+            color: #174c98;
+
+            font-weight: 800;
+
+            white-space: nowrap;
+        }
+
+        .lead-phone {
+
+            white-space: nowrap;
+        }
+
+        .course-badge {
+
+            display: inline-block;
+
+            max-width: 155px;
+
+            padding:
+                5px 7px;
+
+            border-radius: 6px;
+
+            color: #2360b5;
+
+            background:
+                #eaf3ff;
+
+            font-size: 8px;
+
+            font-weight: 750;
+        }
+
+        .mode-badge {
+
+            display: inline-block;
+
+            padding:
+                5px 7px;
+
+            border-radius: 6px;
+
+            color: #218050;
+
+            background:
+                #eaf8f0;
+
+            font-size: 8px;
+
+            font-weight: 750;
+        }
+
+        .message-cell {
+
+            max-width: 260px;
+
+            min-width: 160px;
+
+            line-height: 1.4;
+        }
+
+        .date-cell {
+
+            white-space: nowrap;
+
+            color: #718198;
+
+            font-size: 8px;
+        }
+
+        /* =========================================================
+           LOADING
+           ========================================================= */
+
+        .loading {
+
+            min-height: 160px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 9px;
+
+            color: #8090a5;
+
+            font-size: 10px;
+        }
+
+        .spinner {
+
+            width: 26px;
+            height: 26px;
+
+            border:
+                3px solid #e1eaf5;
+
+            border-top-color:
+                #3477e5;
+
+            border-radius: 50%;
+
+            animation:
+                spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+
+            to {
+                transform: rotate(360deg);
+            }
+
+        }
+
+        .empty-state {
+
+            min-height: 160px;
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 7px;
+
+            color: #8492a5;
+
+            font-size: 10px;
+        }
+
+        /* =========================================================
+           FOOTER
+           ========================================================= */
+
+        .footer {
+
+            padding:
+                15px 10px 20px;
+
+            text-align: center;
+
+            color: #8190a4;
+
+            font-size: 8px;
+        }
+
+        /* =========================================================
+           RESPONSIVE
+           ========================================================= */
+
+        @media (max-width: 1200px) {
+
+            .sidebar {
+                width: 185px;
+            }
+
+            .main {
+
+                width:
+                    calc(100% - 185px);
+
+                margin-left: 185px;
+            }
+
+            .stats-grid {
+
+                grid-template-columns:
+                    repeat(2,1fr);
+            }
+
+            .analytics-grid {
+
+                grid-template-columns:
+                    repeat(2,1fr);
+            }
+
+            .lower-grid {
+
+                grid-template-columns:
+                    300px
+                    minmax(0,1fr);
+            }
+
+        }
+
+        @media (max-width: 900px) {
+
+            .sidebar {
+
+                position: relative;
+
+                width: 100%;
+
+                height: auto;
+
+                min-height: auto;
+            }
+
+            .app {
+                display: block;
+            }
+
+            .main {
+
+                width: 100%;
+
+                margin-left: 0;
+            }
+
+            .sidebar-nav {
+
+                flex-direction: row;
+
+                overflow-x: auto;
+            }
+
+            .nav-item {
+
+                width: auto;
+
+                min-width: 120px;
+            }
+
+            .sidebar-bottom {
+                display: none;
+            }
+
+            .sidebar-brand {
+
+                display: flex;
+
+                align-items: center;
+
+                justify-content: center;
+
+                gap: 12px;
+
+                text-align: left;
+            }
+
+            .sidebar-logo {
+
+                width: 52px;
+                height: 52px;
+            }
+
+            .brand-name {
+                margin-top: 0;
+            }
+
+            .analytics-grid {
+
+                grid-template-columns: 1fr;
+            }
+
+            .lower-grid {
+
+                grid-template-columns: 1fr;
+            }
+
+        }
+
+        @media (max-width: 650px) {
+
+            .top-header {
+
+                padding:
+                    10px 12px;
+            }
+
+            .header-message {
+                display: none;
+            }
+
+            .header-title {
+                font-size: 16px;
+            }
+
+            .header-subtitle {
+                display: none;
+            }
+
+            .header-btn {
+
+                height: 34px;
+
+                padding:
+                    0 9px;
+
+                font-size: 9px;
+            }
+
+            .content {
+
+                padding:
+                    15px 10px 25px;
+            }
+
+            .stats-grid {
+
+                grid-template-columns: 1fr;
+            }
+
+            .overview-row {
+
+                align-items:
+                    flex-start;
+            }
+
+            .active-status {
+                display: none;
+            }
+
+            .toolbar {
+
+                flex-direction: column;
+
+                align-items: stretch;
+            }
+
+            .search-wrapper,
+            .course-filter,
+            .action-btn {
+
+                width: 100%;
+            }
+
+            .calendar-actions {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<div class="app">
+
+
+    <!-- =========================================================
+         SIDEBAR
+         ========================================================= -->
+
+    <aside class="sidebar">
+
+
+        <div class="sidebar-brand">
+
+
+            <img
+                src="/vamadeva-logo.jpg"
+                alt="Vamadeva Logo"
+                class="sidebar-logo"
+            >
+
+
+            <div>
+
+                <div class="brand-name">
+                    VAMADEVA
+                </div>
+
+                <div class="brand-tagline">
+                    Learn · Grow · Build Your Future
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+        <nav class="sidebar-nav">
+
+
+            <button
+                class="nav-item active"
+                onclick="scrollToSection('overview', this)"
+            >
+                <span class="nav-icon">🏠</span>
+                Dashboard
+            </button>
+
+
+            <button
+                class="nav-item"
+                onclick="scrollToSection('enquiries', this)"
+            >
+                <span class="nav-icon">👥</span>
+                Enquiries
+            </button>
+
+
+            <button
+                class="nav-item"
+                onclick="scrollToSection('analytics', this)"
+            >
+                <span class="nav-icon">📊</span>
+                Analytics
+            </button>
+
+
+            <button
+                class="nav-item"
+                onclick="scrollToSection('calendar', this)"
+            >
+                <span class="nav-icon">📅</span>
+                Calendar
+            </button>
+
+
+            <button
+                class="nav-item"
+                onclick="exportCSV()"
+            >
+                <span class="nav-icon">📥</span>
+                Export
+            </button>
+
+
+            <button
+                class="nav-item"
+                onclick="openChatbot()"
+            >
+                <span class="nav-icon">💬</span>
+                Chatbot
+            </button>
+
+
+        </nav>
+
+
+        <div class="sidebar-bottom">
+
+            <div class="sidebar-illustration">
+                🎓
+            </div>
+
+            <div class="sidebar-quote">
+
+                “Knowledge Today<br>
+                A Better Tomorrow”
+
+            </div>
+
+            <div class="sidebar-author">
+                — Vamadeva
+            </div>
+
+        </div>
+
+
+    </aside>
+
+
+    <!-- =========================================================
+         MAIN
+         ========================================================= -->
+
+    <div class="main">
+
+
+        <!-- =====================================================
+             HEADER
+             ===================================================== -->
+
+        <header class="top-header">
+
+
+            <div class="top-left">
+
+                <div class="menu-icon">
+                    ☰
+                </div>
+
+                <div>
+
+                    <div class="header-title">
+                        Admin Dashboard
+                    </div>
+
+                    <div class="header-subtitle">
+                        Enquiry & Training Management System
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="top-right">
+
+
+                <div class="header-message">
+                    "Turning Aspirations into Careers"
+                </div>
+
+
+                <button
+                    type="button"
+                    class="header-btn chatbot-btn"
+                    onclick="openChatbot()"
+                >
+                    💬 Chatbot
+                </button>
+
+
+                <button
+                    type="button"
+                    id="refreshButton"
+                    class="header-btn refresh-btn"
+                    onclick="refreshDashboard(event)"
+                >
+                    ↻ Refresh
+                </button>
+
+
+                <button
+                    type="button"
+                    class="header-btn logout-btn"
+                    onclick="logoutAdmin()"
+                >
+                    ⏻ Logout
+                </button>
+
+
+            </div>
+
+
+        </header>
+
+
+        <!-- =====================================================
+             CONTENT
+             ===================================================== -->
+
+        <main class="content">
+
+
+            <!-- =================================================
+                 OVERVIEW
+                 ================================================= -->
+
+            <section
+                id="overview"
+                class="overview-row"
+            >
+
+                <div>
+
+                    <div class="overview-title">
+                        Enquiry Overview
+                    </div>
+
+                    <div class="overview-text">
+                        Monitor enquiries, customer interests and business activity.
+                    </div>
+
+                </div>
+
+
+                <div class="active-status">
+
+                    <span class="status-dot"></span>
+
+                    Dashboard Active
+
+                </div>
+
+            </section>
+
+
+            <!-- =================================================
+                 STATS
+                 ================================================= -->
+
+            <section class="stats-grid">
+
+
+                <div class="stat-card stat-blue">
+
+                    <div class="stat-content">
+
+                        <div class="stat-icon">
+                            👥
+                        </div>
+
+                        <div class="stat-label">
+                            Total Enquiries
+                        </div>
+
+                        <div
+                            class="stat-number"
+                            id="totalLeads"
+                        >
+                            0
+                        </div>
+
+                        <div class="stat-description">
+                            All time enquiries
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card stat-green">
+
+                    <div class="stat-content">
+
+                        <div class="stat-icon">
+                            📅
+                        </div>
+
+                        <div class="stat-label">
+                            Today's Enquiries
+                        </div>
+
+                        <div
+                            class="stat-number"
+                            id="todayLeads"
+                        >
+                            0
+                        </div>
+
+                        <div class="stat-description">
+                            Received today
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card stat-orange">
+
+                    <div class="stat-content">
+
+                        <div class="stat-icon">
+                            📊
+                        </div>
+
+                        <div class="stat-label">
+                            This Month
+                        </div>
+
+                        <div
+                            class="stat-number"
+                            id="monthLeads"
+                        >
+                            0
+                        </div>
+
+                        <div
+                            class="stat-description"
+                            id="monthDescription"
+                        >
+                            Current month
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card stat-pink">
+
+                    <div class="stat-content">
+
+                        <div class="stat-icon">
+                            🎯
+                        </div>
+
+                        <div class="stat-label">
+                            Active Courses
+                        </div>
+
+                        <div
+                            class="stat-number"
+                            id="activeCourses"
+                        >
+                            0
+                        </div>
+
+                        <div class="stat-description">
+                            Courses with enquiries
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+            </section>
+
+
+            <!-- =================================================
+                 ANALYTICS
+                 ================================================= -->
+
+            <section
+                id="analytics"
+                class="analytics-grid"
+            >
+
+
+                <div class="analytics-card">
+
+
+                    <div class="analytics-card-header">
+
+
+                        <div class="analytics-title-wrap">
+
+                            <div class="analytics-icon">
+                                📊
+                            </div>
+
+                            <div>
+
+                                <div class="analytics-title">
+                                    Course Interest
+                                </div>
+
+                                <div class="analytics-description">
+                                    Enquiries by course
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="analytics-badge">
+                            ALL TIME
+                        </div>
+
+
+                    </div>
+
+
+                    <canvas
+                        id="courseChart"
+                    ></canvas>
+
+
+                </div>
+
+
+                <div class="analytics-card">
+
+
+                    <div class="analytics-card-header">
+
+
+                        <div class="analytics-title-wrap">
+
+                            <div class="analytics-icon">
+                                🎯
+                            </div>
+
+                            <div>
+
+                                <div class="analytics-title">
+                                    Training Mode
+                                </div>
+
+                                <div class="analytics-description">
+                                    Online vs Offline enquiries
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="analytics-badge">
+                            ALL TIME
+                        </div>
+
+
+                    </div>
+
+
+                    <canvas
+                        id="modeChart"
+                    ></canvas>
+
+
+                </div>
+
+
+                <div class="analytics-card">
+
+
+                    <div class="analytics-card-header">
+
+
+                        <div class="analytics-title-wrap">
+
+                            <div class="analytics-icon">
+                                📈
+                            </div>
+
+                            <div>
+
+                                <div class="analytics-title">
+                                    Daily Enquiry Trend
+                                </div>
+
+                                <div class="analytics-description">
+                                    Last 14 days
+                                </div>
+
+                            </div>
+
+                        </div>
+
+
+                        <div class="analytics-badge">
+                            14 DAYS
+                        </div>
+
+
+                    </div>
+
+
+                    <canvas
+                        id="dailyChart"
+                    ></canvas>
+
+
+                </div>
+
+
+            </section>
+
+
+            <!-- =================================================
+                 LOWER GRID
+                 ================================================= -->
+
+            <section class="lower-grid">
+
+
+                <!-- =================================================
+                     CALENDAR
+                     ================================================= -->
+
+                <div
+                    id="calendar"
+                    class="card"
+                >
+
+
+                    <div class="card-header">
+
+
+                        <div class="card-title">
+
+                            <span class="card-title-icon">
+                                📅
+                            </span>
+
+                            Enquiry Calendar
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div class="calendar-controls">
+
+
+                        <button
+                            type="button"
+                            class="month-btn"
+                            onclick="changeMonth(-1)"
+                        >
+                            ‹
+                        </button>
+
+
+                        <div
+                            class="month-title"
+                            id="monthTitle"
+                        >
+                            Loading...
+                        </div>
+
+
+                        <button
+                            type="button"
+                            class="month-btn"
+                            onclick="changeMonth(1)"
+                        >
+                            ›
+                        </button>
+
+
+                    </div>
+
+
+                    <div class="calendar">
+
+
+                        <div class="weekdays">
+
+                            <div class="weekday">Sun</div>
+                            <div class="weekday">Mon</div>
+                            <div class="weekday">Tue</div>
+                            <div class="weekday">Wed</div>
+                            <div class="weekday">Thu</div>
+                            <div class="weekday">Fri</div>
+                            <div class="weekday">Sat</div>
+
+                        </div>
+
+
+                        <div
+                            class="calendar-days"
+                            id="calendarDays"
+                        ></div>
+
+
+                    </div>
+
+
+                    <!-- =================================================
+                         MULTI DATE INFORMATION
+                         ================================================= -->
+
+                    <div
+                        id="selectionInfo"
+                        class="selection-info"
+                    >
+
+                        <strong>
+                            No dates selected
+                        </strong>
+
+                        <div class="selection-dates">
+                            Click dates on the calendar to select multiple dates.
+                        </div>
+
+                    </div>
+
+
+                    <!-- =================================================
+                         CALENDAR ACTIONS
+                         ================================================= -->
+
+                    <div class="calendar-actions">
+
+
+                        <button
+                            type="button"
+                            class="calendar-action-btn clear-dates-btn"
+                            onclick="clearSelectedDates()"
+                        >
+                            ✕ Clear Selection
+                        </button>
+
+
+                        <button
+                            type="button"
+                            id="exportSelectedButton"
+                            class="calendar-action-btn export-dates-btn"
+                            onclick="exportSelectedDates()"
+                            disabled
+                        >
+                            📥 Export Selected
+                        </button>
+
+
+                    </div>
+
+
+                </div>
+
+
+                <!-- =================================================
+                     CUSTOMER ENQUIRIES
+                     ================================================= -->
+
+                <div
+                    id="enquiries"
+                    class="card"
+                >
+
+
+                    <div class="card-header">
+
+
+                        <div class="card-title">
+
+                            <span class="card-title-icon">
+                                👥
+                            </span>
+
+                            Customer Enquiries
+
+                        </div>
+
+
+                    </div>
+
+
+                    <div class="toolbar">
+
+
+                        <div class="search-wrapper">
+
+                            <span class="search-icon">
+                                🔍
+                            </span>
+
+
+                            <input
+                                type="text"
+                                id="searchInput"
+                                class="search-input"
+                                placeholder="Search name, phone, email..."
+                                oninput="filterLeads()"
+                            >
+
+                        </div>
+
+
+                        <select
+                            id="courseFilter"
+                            class="course-filter"
+                            onchange="filterLeads()"
+                        >
+
+                            <option value="">
+                                All Courses
+                            </option>
+
+                        </select>
+
+
+                        <button
+                            type="button"
+                            class="action-btn"
+                            onclick="exportCSV()"
+                        >
+                            📥 Export All CSV
+                        </button>
+
+
+                        <button
+                            type="button"
+                            class="action-btn secondary"
+                            onclick="clearFilters()"
+                        >
+                            Clear
+                        </button>
+
+
+                    </div>
+
+
+                    <div
+                        class="table-wrapper"
+                        id="tableContainer"
+                    >
+
+                        <div class="loading">
+
+                            <div class="spinner"></div>
+
+                            Loading enquiries...
+
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+
+            </section>
+
+
+        </main>
+
+
+        <div class="footer">
+
+            Vamadeva Training & Consulting
+            &nbsp; • &nbsp;
+            Empowering Careers · Building Futures ❤️
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+<script>
+
+/* ================================================================
+   GLOBAL VARIABLES
+   ================================================================ */
+
+let allLeads = [];
+
+let selectedDates = new Set();
+
+let currentCalendarDate = new Date();
+
+let isRefreshing = false;
+
+let courseChart = null;
+
+let modeChart = null;
+
+let dailyChart = null;
+
+
+/* ================================================================
+   LOAD DASHBOARD
+   ================================================================ */
+
+async function loadDashboard() {
+
+    try {
+
+        const response =
+            await fetch(
+                "/admin/stats",
+                {
+                    method: "GET",
+                    credentials: "same-origin",
+                    cache: "no-store"
+                }
+            );
+
+
+        if (
+            response.status === 401
+        ) {
+
+            window.location.href =
+                "/admin/login";
+
+            return false;
+
+        }
+
+
+        if (!response.ok) {
+
+            throw new Error(
+                `Stats request failed: ${response.status}`
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.success) {
+
+            throw new Error(
+                data.message ||
+                "Unable to load statistics."
+            );
+
+        }
+
+
+        document.getElementById(
+            "totalLeads"
+        ).textContent =
+            data.total || 0;
+
+
+        document.getElementById(
+            "todayLeads"
+        ).textContent =
+            data.today || 0;
+
+
+        document.getElementById(
+            "monthLeads"
+        ).textContent =
+            data.this_month || 0;
+
+
+        const activeCourses =
+            (data.courses || [])
+                .filter(
+                    item =>
+                        item.count > 0
+                )
+                .length;
+
+
+        document.getElementById(
+            "activeCourses"
+        ).textContent =
+            activeCourses;
+
+
+        document.getElementById(
+            "monthDescription"
+        ).textContent =
+            new Date().toLocaleDateString(
+                "en-IN",
+                {
+                    month: "long",
+                    year: "numeric"
+                }
+            );
+
+
+        populateCourseFilter(
+            data.courses || []
+        );
+
+
+        await loadLeads();
+
+        await loadCalendar();
+
+
+        return true;
+
+    }
+    catch (error) {
+
+        console.error(
+            "Dashboard error:",
+            error
+        );
+
+
+        document.getElementById(
+            "tableContainer"
+        ).innerHTML = `
+
+            <div class="empty-state">
+
+                <div style="font-size:28px;">
+                    ⚠️
+                </div>
+
+                <div>
+                    Unable to load dashboard.
+                </div>
+
+            </div>
+
+        `;
+
+
+        return false;
+
+    }
+
+}
+
+
+/* ================================================================
+   LOAD LEADS
+   ================================================================ */
+
+async function loadLeads() {
+
+    const response =
+        await fetch(
+            "/admin/leads",
+            {
+                method: "GET",
+                credentials: "same-origin",
+                cache: "no-store"
+            }
+        );
+
+
+    if (
+        response.status === 401
+    ) {
+
+        window.location.href =
+            "/admin/login";
+
+        return;
+
+    }
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Leads request failed: ${response.status}`
+        );
+
+    }
+
+
+    const data =
+        await response.json();
+
+
+    if (!data.success) {
+
+        throw new Error(
+            data.message ||
+            "Unable to load leads."
+        );
+
+    }
+
+
+    allLeads =
+        data.leads || [];
+
+
+    renderLeads(
+        allLeads
+    );
+
+
+    updateAnalytics(
+        allLeads
+    );
+
+}
+
+
+/* ================================================================
+   ANALYTICS
+   ================================================================ */
+
+function updateAnalytics(
+    leads
+) {
+
+    updateCourseChart(
+        leads
+    );
+
+    updateModeChart(
+        leads
+    );
+
+    updateDailyChart(
+        leads
+    );
+
+}
+
+
+/* ================================================================
+   COURSE CHART
+   ================================================================ */
+
+function updateCourseChart(
+    leads
+) {
+
+    const counts = {};
+
+
+    leads.forEach(
+        lead => {
+
+            const course =
+                (
+                    lead.course ||
+                    "Not Specified"
+                )
+                .trim();
+
+
+            counts[course] =
+                (
+                    counts[course] || 0
+                ) + 1;
+
+        }
+    );
+
+
+    const sorted =
+        Object.entries(
+            counts
+        )
+        .sort(
+            (a,b) =>
+                b[1] - a[1]
+        )
+        .slice(
+            0,
+            6
+        );
+
+
+    const labels =
+        sorted.map(
+            item =>
+                item[0]
+        );
+
+
+    const values =
+        sorted.map(
+            item =>
+                item[1]
+        );
+
+
+    const canvas =
+        document.getElementById(
+            "courseChart"
+        );
+
+
+    if (
+        courseChart
+    ) {
+
+        courseChart.destroy();
+
+    }
+
+
+    courseChart =
+        new ColorBarChart(
+            canvas,
+            labels,
+            values
+        );
+
+}
+
+
+/* ================================================================
+   MULTI COLOR DONUT
+   ================================================================ */
+
+function updateModeChart(
+    leads
+) {
+
+    const counts = {};
+
+
+    leads.forEach(
+        lead => {
+
+            let mode =
+                (
+                    lead.training_mode ||
+                    "Not Specified"
+                )
+                .trim();
+
+
+            if (
+                mode.toLowerCase()
+                    === "online"
+            ) {
+
+                mode =
+                    "Online";
+
+            }
+            else if (
+                mode.toLowerCase()
+                    === "offline"
+            ) {
+
+                mode =
+                    "Offline";
+
+            }
+
+
+            counts[mode] =
+                (
+                    counts[mode] || 0
+                ) + 1;
+
+        }
+    );
+
+
+    const labels =
+        Object.keys(
+            counts
+        );
+
+
+    const values =
+        Object.values(
+            counts
+        );
+
+
+    const canvas =
+        document.getElementById(
+            "modeChart"
+        );
+
+
+    if (
+        modeChart
+    ) {
+
+        modeChart.destroy();
+
+    }
+
+
+    modeChart =
+        new MultiColorDonut(
+            canvas,
+            labels,
+            values
+        );
+
+}
+
+
+/* ================================================================
+   DAILY CHART
+   ================================================================ */
+
+function updateDailyChart(
+    leads
+) {
+
+    const today =
+        new Date();
+
+
+    const labels = [];
+
+    const values = [];
+
+
+    for (
+        let i = 13;
+        i >= 0;
+        i--
+    ) {
+
+        const date =
+            new Date(
+                today
+            );
+
+
+        date.setDate(
+            today.getDate() - i
+        );
+
+
+        const key =
+            formatDateKey(
+                date
+            );
+
+
+        let count = 0;
+
+
+        leads.forEach(
+            lead => {
+
+                if (
+                    !lead.created_at
+                ) {
+
+                    return;
+
+                }
+
+
+                const leadDate =
+                    new Date(
+                        lead.created_at
+                    );
+
+
+                if (
+                    Number.isNaN(
+                        leadDate.getTime()
+                    )
+                ) {
+
+                    return;
+
+                }
+
+
+                if (
+                    formatDateKey(
+                        leadDate
+                    )
+                    === key
+                ) {
+
+                    count++;
+
+                }
+
+            }
+        );
+
+
+        labels.push(
+            date.toLocaleDateString(
+                "en-IN",
+                {
+                    day: "2-digit",
+                    month: "short"
+                }
+            )
+        );
+
+
+        values.push(
+            count
+        );
+
+    }
+
+
+    const canvas =
+        document.getElementById(
+            "dailyChart"
+        );
+
+
+    if (
+        dailyChart
+    ) {
+
+        dailyChart.destroy();
+
+    }
+
+
+    dailyChart =
+        new ColorLineChart(
+            canvas,
+            labels,
+            values
+        );
+
+}
+
+
+/* ================================================================
+   COLOR BAR CHART
+   ================================================================ */
+
+class ColorBarChart {
+
+
+    constructor(
+        canvas,
+        labels,
+        values
+    ) {
+
+        this.canvas =
+            canvas;
+
+        this.ctx =
+            canvas.getContext(
+                "2d"
+            );
+
+        this.labels =
+            labels;
+
+        this.values =
+            values;
+
+        this.colors = [
+
+            "#2673ee",
+            "#6845df",
+            "#ef477f",
+            "#ffab18",
+            "#18bba0",
+            "#2db7e8"
+
+        ];
+
+
+        this.draw();
+
+
+        this.resizeHandler =
+            () => this.draw();
+
+
+        window.addEventListener(
+            "resize",
+            this.resizeHandler
+        );
+
+    }
+
+
+    destroy() {
+
+        window.removeEventListener(
+            "resize",
+            this.resizeHandler
+        );
+
+    }
+
+
+    draw() {
+
+        const rect =
+            this.canvas
+                .getBoundingClientRect();
+
+
+        const dpr =
+            window.devicePixelRatio ||
+            1;
+
+
+        this.canvas.width =
+            rect.width * dpr;
+
+
+        this.canvas.height =
+            rect.height * dpr;
+
+
+        const ctx =
+            this.ctx;
+
+
+        ctx.setTransform(
+            dpr,
+            0,
+            0,
+            dpr,
+            0,
+            0
+        );
+
+
+        const width =
+            rect.width;
+
+
+        const height =
+            rect.height;
+
+
+        ctx.clearRect(
+            0,
+            0,
+            width,
+            height
+        );
+
+
+        if (
+            !this.values.length
+        ) {
+
+            ctx.fillStyle =
+                "#8794a7";
+
+            ctx.font =
+                "11px Segoe UI";
+
+            ctx.textAlign =
+                "center";
+
+            ctx.fillText(
+                "No course data available",
+                width / 2,
+                height / 2
+            );
+
+            return;
+
+        }
+
+
+        const left = 45;
+        const right = 15;
+        const top = 20;
+        const bottom = 34;
+
+
+        const chartWidth =
+            width -
+            left -
+            right;
+
+
+        const chartHeight =
+            height -
+            top -
+            bottom;
+
+
+        const max =
+            Math.max(
+                ...this.values,
+                1
+            );
+
+
+        const barGap = 16;
+
+
+        const barWidth =
+            (
+                chartWidth -
+                (
+                    barGap *
+                    (
+                        this.values.length - 1
+                    )
+                )
+            ) /
+            this.values.length;
+
+
+        ctx.strokeStyle =
+            "#edf1f6";
+
+        ctx.lineWidth = 1;
+
+
+        for (
+            let i = 0;
+            i <= max;
+            i++
+        ) {
+
+            const y =
+                top +
+                chartHeight -
+                (
+                    i /
+                    max *
+                    chartHeight
+                );
+
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                left,
+                y
+            );
+
+            ctx.lineTo(
+                width - right,
+                y
+            );
+
+            ctx.stroke();
+
+
+            ctx.fillStyle =
+                "#8a98ab";
+
+            ctx.font =
+                "8px Segoe UI";
+
+            ctx.textAlign =
+                "right";
+
+
+            ctx.fillText(
+                i,
+                left - 7,
+                y + 3
+            );
+
+        }
+
+
+        this.values.forEach(
+            (
+                value,
+                index
+            ) => {
+
+
+                const x =
+                    left +
+                    index *
+                    (
+                        barWidth +
+                        barGap
+                    );
+
+
+                const barHeight =
+                    (
+                        value /
+                        max
+                    ) *
+                    chartHeight;
+
+
+                const y =
+                    top +
+                    chartHeight -
+                    barHeight;
+
+
+                const gradient =
+                    ctx.createLinearGradient(
+                        0,
+                        y,
+                        0,
+                        top + chartHeight
+                    );
+
+
+                gradient.addColorStop(
+                    0,
+                    this.colors[
+                        index %
+                        this.colors.length
+                    ]
+                );
+
+
+                gradient.addColorStop(
+                    1,
+                    "#7e5de2"
+                );
+
+
+                ctx.fillStyle =
+                    gradient;
+
+
+                roundRect(
+                    ctx,
+                    x,
+                    y,
+                    barWidth,
+                    barHeight,
+                    5
+                );
+
+
+                ctx.fill();
+
+
+                ctx.fillStyle =
+                    "#173c78";
+
+                ctx.font =
+                    "bold 10px Segoe UI";
+
+                ctx.textAlign =
+                    "center";
+
+
+                ctx.fillText(
+                    value,
+                    x +
+                    barWidth / 2,
+                    y - 6
+                );
+
+
+                ctx.fillStyle =
+                    "#718199";
+
+                ctx.font =
+                    "8px Segoe UI";
+
+
+                let label =
+                    this.labels[
+                        index
+                    ];
+
+
+                if (
+                    label.length > 11
+                ) {
+
+                    label =
+                        label.substring(
+                            0,
+                            10
+                        ) +
+                        "...";
+
+                }
+
+
+                ctx.fillText(
+                    label,
+                    x +
+                    barWidth / 2,
+                    height - 13
+                );
+
+            }
+        );
+
+    }
+
+}
+
+
+/* ================================================================
+   MULTI COLOR DONUT
+   ================================================================ */
+
+class MultiColorDonut {
+
+
+    constructor(
+        canvas,
+        labels,
+        values
+    ) {
+
+        this.canvas =
+            canvas;
+
+        this.ctx =
+            canvas.getContext(
+                "2d"
+            );
+
+        this.labels =
+            labels;
+
+        this.values =
+            values;
+
+
+        this.colors = [
+
+            "#2478ef",
+            "#6844df",
+            "#ef477f",
+            "#ffab19",
+            "#19b99c",
+            "#31b5e7"
+
+        ];
+
+
+        this.draw();
+
+
+        this.resizeHandler =
+            () => this.draw();
+
+
+        window.addEventListener(
+            "resize",
+            this.resizeHandler
+        );
+
+    }
+
+
+    destroy() {
+
+        window.removeEventListener(
+            "resize",
+            this.resizeHandler
+        );
+
+    }
+
+
+    draw() {
+
+        const rect =
+            this.canvas
+                .getBoundingClientRect();
+
+
+        const dpr =
+            window.devicePixelRatio ||
+            1;
+
+
+        this.canvas.width =
+            rect.width * dpr;
+
+
+        this.canvas.height =
+            rect.height * dpr;
+
+
+        const ctx =
+            this.ctx;
+
+
+        ctx.setTransform(
+            dpr,
+            0,
+            0,
+            dpr,
+            0,
+            0
+        );
+
+
+        const width =
+            rect.width;
+
+
+        const height =
+            rect.height;
+
+
+        ctx.clearRect(
+            0,
+            0,
+            width,
+            height
+        );
+
+
+        if (
+            !this.values.length
+        ) {
+
+            ctx.fillStyle =
+                "#8794a7";
+
+            ctx.font =
+                "11px Segoe UI";
+
+            ctx.textAlign =
+                "center";
+
+            ctx.fillText(
+                "No training mode data",
+                width / 2,
+                height / 2
+            );
+
+            return;
+
+        }
+
+
+        const total =
+            this.values.reduce(
+                (
+                    sum,
+                    value
+                ) =>
+                    sum + value,
+                0
+            );
+
+
+        const centerX =
+            width * 0.34;
+
+
+        const centerY =
+            height * 0.50;
+
+
+        const radius =
+            Math.min(
+                67,
+                height * 0.36
+            );
+
+
+        const innerRadius =
+            radius * 0.56;
+
+
+        let startAngle =
+            -Math.PI / 2;
+
+
+        this.values.forEach(
+            (
+                value,
+                index
+            ) => {
+
+
+                const slice =
+                    (
+                        value /
+                        total
+                    ) *
+                    Math.PI *
+                    2;
+
+
+                ctx.beginPath();
+
+
+                ctx.arc(
+                    centerX,
+                    centerY,
+                    radius,
+                    startAngle,
+                    startAngle + slice
+                );
+
+
+                ctx.arc(
+                    centerX,
+                    centerY,
+                    innerRadius,
+                    startAngle + slice,
+                    startAngle,
+                    true
+                );
+
+
+                ctx.closePath();
+
+
+                ctx.fillStyle =
+                    this.colors[
+                        index %
+                        this.colors.length
+                    ];
+
+
+                ctx.fill();
+
+
+                startAngle +=
+                    slice;
+
+            }
+        );
+
+
+        ctx.beginPath();
+
+        ctx.arc(
+            centerX,
+            centerY,
+            innerRadius,
+            0,
+            Math.PI * 2
+        );
+
+
+        ctx.fillStyle =
+            "#ffffff";
+
+
+        ctx.fill();
+
+
+        ctx.fillStyle =
+            "#173d78";
+
+        ctx.font =
+            "bold 20px Segoe UI";
+
+        ctx.textAlign =
+            "center";
+
+
+        ctx.fillText(
+            total,
+            centerX,
+            centerY + 4
+        );
+
+
+        ctx.fillStyle =
+            "#8795a8";
+
+        ctx.font =
+            "8px Segoe UI";
+
+
+        ctx.fillText(
+            "TOTAL",
+            centerX,
+            centerY + 18
+        );
+
+
+        let legendY =
+            55;
+
+
+        this.labels.forEach(
+            (
+                label,
+                index
+            ) => {
+
+
+                const value =
+                    this.values[
+                        index
+                    ];
+
+
+                const percentage =
+                    (
+                        value /
+                        total *
+                        100
+                    )
+                    .toFixed(0);
+
+
+                ctx.fillStyle =
+                    this.colors[
+                        index %
+                        this.colors.length
+                    ];
+
+
+                ctx.beginPath();
+
+                ctx.arc(
+                    width * 0.66,
+                    legendY - 3,
+                    5,
+                    0,
+                    Math.PI * 2
+                );
+
+                ctx.fill();
+
+
+                ctx.fillStyle =
+                    "#4d617d";
+
+                ctx.font =
+                    "9px Segoe UI";
+
+                ctx.textAlign =
+                    "left";
+
+
+                ctx.fillText(
+                    label,
+                    width * 0.66 + 12,
+                    legendY
+                );
+
+
+                ctx.fillStyle =
+                    "#8b98aa";
+
+                ctx.font =
+                    "8px Segoe UI";
+
+
+                ctx.fillText(
+                    `${value} (${percentage}%)`,
+                    width * 0.66 + 12,
+                    legendY + 11
+                );
+
+
+                legendY +=
+                    40;
+
+            }
+        );
+
+    }
+
+}
+
+
+/* ================================================================
+   COLOR LINE CHART
+   ================================================================ */
+
+class ColorLineChart {
+
+
+    constructor(
+        canvas,
+        labels,
+        values
+    ) {
+
+        this.canvas =
+            canvas;
+
+        this.ctx =
+            canvas.getContext(
+                "2d"
+            );
+
+        this.labels =
+            labels;
+
+        this.values =
+            values;
+
+
+        this.draw();
+
+
+        this.resizeHandler =
+            () => this.draw();
+
+
+        window.addEventListener(
+            "resize",
+            this.resizeHandler
+        );
+
+    }
+
+
+    destroy() {
+
+        window.removeEventListener(
+            "resize",
+            this.resizeHandler
+        );
+
+    }
+
+
+    draw() {
+
+        const rect =
+            this.canvas
+                .getBoundingClientRect();
+
+
+        const dpr =
+            window.devicePixelRatio ||
+            1;
+
+
+        this.canvas.width =
+            rect.width * dpr;
+
+
+        this.canvas.height =
+            rect.height * dpr;
+
+
+        const ctx =
+            this.ctx;
+
+
+        ctx.setTransform(
+            dpr,
+            0,
+            0,
+            dpr,
+            0,
+            0
+        );
+
+
+        const width =
+            rect.width;
+
+
+        const height =
+            rect.height;
+
+
+        ctx.clearRect(
+            0,
+            0,
+            width,
+            height
+        );
+
+
+        const left = 32;
+        const right = 10;
+        const top = 15;
+        const bottom = 28;
+
+
+        const chartWidth =
+            width -
+            left -
+            right;
+
+
+        const chartHeight =
+            height -
+            top -
+            bottom;
+
+
+        const maxValue =
+            Math.max(
+                ...this.values,
+                1
+            );
+
+
+        const points = [];
+
+
+        ctx.strokeStyle =
+            "#edf1f6";
+
+        ctx.lineWidth = 1;
+
+
+        for (
+            let i = 0;
+            i <= 3;
+            i++
+        ) {
+
+            const y =
+                top +
+                (
+                    chartHeight *
+                    i /
+                    3
+                );
+
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                left,
+                y
+            );
+
+            ctx.lineTo(
+                width - right,
+                y
+            );
+
+            ctx.stroke();
+
+
+            ctx.fillStyle =
+                "#8795a8";
+
+            ctx.font =
+                "8px Segoe UI";
+
+            ctx.textAlign =
+                "right";
+
+
+            const value =
+                Math.round(
+                    maxValue -
+                    (
+                        maxValue *
+                        i /
+                        3
+                    )
+                );
+
+
+            ctx.fillText(
+                value,
+                left - 7,
+                y + 3
+            );
+
+        }
+
+
+        this.values.forEach(
+            (
+                value,
+                index
+            ) => {
+
+
+                const x =
+                    left +
+                    (
+                        index /
+                        Math.max(
+                            this.values.length - 1,
+                            1
+                        )
+                    ) *
+                    chartWidth;
+
+
+                const y =
+                    top +
+                    chartHeight -
+                    (
+                        value /
+                        maxValue
+                    ) *
+                    chartHeight;
+
+
+                points.push({
+                    x,
+                    y,
+                    value
+                });
+
+            }
+        );
+
+
+        if (
+            points.length
+        ) {
+
+            const gradient =
+                ctx.createLinearGradient(
+                    0,
+                    top,
+                    0,
+                    top + chartHeight
+                );
+
+
+            gradient.addColorStop(
+                0,
+                "rgba(52,119,229,0.22)"
+            );
+
+
+            gradient.addColorStop(
+                1,
+                "rgba(104,68,223,0.02)"
+            );
+
+
+            ctx.beginPath();
+
+
+            ctx.moveTo(
+                points[0].x,
+                top + chartHeight
+            );
+
+
+            points.forEach(
+                point => {
+
+                    ctx.lineTo(
+                        point.x,
+                        point.y
+                    );
+
+                }
+            );
+
+
+            ctx.lineTo(
+                points[
+                    points.length - 1
+                ].x,
+                top + chartHeight
+            );
+
+
+            ctx.closePath();
+
+
+            ctx.fillStyle =
+                gradient;
+
+
+            ctx.fill();
+
+        }
+
+
+        if (
+            points.length
+        ) {
+
+            ctx.beginPath();
+
+
+            points.forEach(
+                (
+                    point,
+                    index
+                ) => {
+
+                    if (
+                        index === 0
+                    ) {
+
+                        ctx.moveTo(
+                            point.x,
+                            point.y
+                        );
+
+                    }
+                    else {
+
+                        ctx.lineTo(
+                            point.x,
+                            point.y
+                        );
+
+                    }
+
+                }
+            );
+
+
+            const lineGradient =
+                ctx.createLinearGradient(
+                    left,
+                    0,
+                    width - right,
+                    0
+                );
+
+
+            lineGradient.addColorStop(
+                0,
+                "#2478ef"
+            );
+
+
+            lineGradient.addColorStop(
+                0.5,
+                "#6844df"
+            );
+
+
+            lineGradient.addColorStop(
+                1,
+                "#ef477f"
+            );
+
+
+            ctx.strokeStyle =
+                lineGradient;
+
+
+            ctx.lineWidth =
+                2.5;
+
+
+            ctx.stroke();
+
+        }
+
+
+        points.forEach(
+            (
+                point,
+                index
+            ) => {
+
+
+                ctx.beginPath();
+
+                ctx.arc(
+                    point.x,
+                    point.y,
+                    3.7,
+                    0,
+                    Math.PI * 2
+                );
+
+
+                ctx.fillStyle =
+                    index ===
+                    points.length - 1
+                        ? "#ef477f"
+                        : "#2478ef";
+
+
+                ctx.fill();
+
+
+                ctx.beginPath();
+
+                ctx.arc(
+                    point.x,
+                    point.y,
+                    1.7,
+                    0,
+                    Math.PI * 2
+                );
+
+
+                ctx.fillStyle =
+                    "#ffffff";
+
+
+                ctx.fill();
+
+            }
+        );
+
+
+        ctx.fillStyle =
+            "#8795a8";
+
+        ctx.font =
+            "8px Segoe UI";
+
+        ctx.textAlign =
+            "center";
+
+
+        this.labels.forEach(
+            (
+                label,
+                index
+            ) => {
+
+
+                if (
+                    index % 2 !== 0
+                ) {
+
+                    return;
+
+                }
+
+
+                const x =
+                    left +
+                    (
+                        index /
+                        Math.max(
+                            this.labels.length - 1,
+                            1
+                        )
+                    ) *
+                    chartWidth;
+
+
+                ctx.fillText(
+                    label,
+                    x,
+                    height - 8
+                );
+
+            }
+        );
+
+    }
+
+}
+
+
+/* ================================================================
+   ROUND RECT
+   ================================================================ */
+
+function roundRect(
+    ctx,
+    x,
+    y,
+    width,
+    height,
+    radius
+) {
+
+    const r =
+        Math.min(
+            radius,
+            width / 2,
+            height / 2
+        );
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        x + r,
+        y
+    );
+
+    ctx.arcTo(
+        x + width,
+        y,
+        x + width,
+        y + height,
+        r
+    );
+
+    ctx.arcTo(
+        x + width,
+        y + height,
+        x,
+        y + height,
+        r
+    );
+
+    ctx.arcTo(
+        x,
+        y + height,
+        x,
+        y,
+        r
+    );
+
+    ctx.arcTo(
+        x,
+        y,
+        x + width,
+        y,
+        r
+    );
+
+    ctx.closePath();
+
+}
+
+
+/* ================================================================
+   RENDER LEADS
+   ================================================================ */
+
+function renderLeads(
+    leads
+) {
+
+    const container =
+        document.getElementById(
+            "tableContainer"
+        );
+
+
+    if (
+        !leads.length
+    ) {
+
+        container.innerHTML = `
+
+            <div class="empty-state">
+
+                <div style="font-size:28px;">
+                    📭
+                </div>
+
+                <div>
+                    No enquiries found.
+                </div>
+
+            </div>
+
+        `;
+
+        return;
+
+    }
+
+
+    let html = `
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th>Email</th>
+                    <th>Qualification</th>
+                    <th>Career Goal</th>
+                    <th>Experience</th>
+                    <th>Course</th>
+                    <th>Mode</th>
+                    <th>Message</th>
+                    <th>Date</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+    `;
+
+
+    leads.forEach(
+        lead => {
+
+            html += `
+
+                <tr>
+
+                    <td>
+                        ${escapeHtml(
+                            lead.id || ""
+                        )}
+                    </td>
+
+                    <td>
+
+                        <div class="lead-name">
+                            ${escapeHtml(
+                                lead.name || "-"
+                            )}
+                        </div>
+
+                    </td>
+
+                    <td>
+
+                        <div class="lead-phone">
+                            ${escapeHtml(
+                                lead.phone || "-"
+                            )}
+                        </div>
+
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            lead.email || "-"
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            lead.qualification || "-"
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            lead.career_goal || "-"
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHtml(
+                            lead.experience || "-"
+                        )}
+                    </td>
+
+                    <td>
+
+                        <span class="course-badge">
+
+                            ${escapeHtml(
+                                lead.course || "-"
+                            )}
+
+                        </span>
+
+                    </td>
+
+                    <td>
+
+                        <span class="mode-badge">
+
+                            ${escapeHtml(
+                                lead.training_mode || "-"
+                            )}
+
+                        </span>
+
+                    </td>
+
+                    <td class="message-cell">
+
+                        ${escapeHtml(
+                            lead.message || "-"
+                        )}
+
+                    </td>
+
+                    <td class="date-cell">
+
+                        ${escapeHtml(
+                            formatDate(
+                                lead.created_at
+                            )
+                        )}
+
+                    </td>
+
+                </tr>
+
+            `;
+
+        }
+    );
+
+
+    html += `
+
+            </tbody>
+
+        </table>
+
+    `;
+
+
+    container.innerHTML =
+        html;
+
+}
+
+
+/* ================================================================
+   COURSE FILTER
+   ================================================================ */
+
+function populateCourseFilter(
+    courses
+) {
+
+    const select =
+        document.getElementById(
+            "courseFilter"
+        );
+
+
+    const currentValue =
+        select.value;
+
+
+    select.innerHTML = `
+
+        <option value="">
+            All Courses
+        </option>
+
+    `;
+
+
+    courses.forEach(
+        item => {
+
+            if (
+                !item.course
+            ) {
+
+                return;
+
+            }
+
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+
+            option.value =
+                item.course;
+
+
+            option.textContent =
+                `${item.course} (${item.count})`;
+
+
+            select.appendChild(
+                option
+            );
+
+        }
+    );
+
+
+    select.value =
+        currentValue;
+
+}
+
+
+/* ================================================================
+   FILTER
+   ================================================================ */
+
+function filterLeads() {
+
+    const search =
+        document.getElementById(
+            "searchInput"
+        )
+        .value
+        .toLowerCase()
+        .trim();
+
+
+    const course =
+        document.getElementById(
+            "courseFilter"
+        )
+        .value
+        .toLowerCase();
+
+
+    const filtered =
+        allLeads.filter(
+            lead => {
+
+                const searchable = [
+
+                    lead.name,
+                    lead.phone,
+                    lead.email,
+                    lead.qualification,
+                    lead.career_goal,
+                    lead.experience,
+                    lead.course,
+                    lead.training_mode,
+                    lead.message
+
+                ]
+                .join(" ")
+                .toLowerCase();
+
+
+                const searchMatch =
+                    !search ||
+                    searchable.includes(
+                        search
+                    );
+
+
+                const courseMatch =
+                    !course ||
+                    (
+                        lead.course ||
+                        ""
+                    )
+                    .toLowerCase()
+                    === course;
+
+
+                return (
+                    searchMatch &&
+                    courseMatch
+                );
+
+            }
+        );
+
+
+    renderLeads(
+        filtered
+    );
+
+}
+
+
+/* ================================================================
+   CLEAR FILTERS
+   ================================================================ */
+
+function clearFilters() {
+
+    document.getElementById(
+        "searchInput"
+    ).value = "";
+
+
+    document.getElementById(
+        "courseFilter"
+    ).value = "";
+
+
+    renderLeads(
+        allLeads
+    );
+
+}
+
+
+/* ================================================================
+   CALENDAR LOAD
+   ================================================================ */
+
+async function loadCalendar() {
+
+    const year =
+        currentCalendarDate
+            .getFullYear();
+
+
+    const month =
+        currentCalendarDate
+            .getMonth() + 1;
+
+
+    const response =
+        await fetch(
+            `/admin/calendar?year=${year}&month=${month}`,
+            {
+                method: "GET",
+                credentials: "same-origin",
+                cache: "no-store"
+            }
+        );
+
+
+    if (
+        response.status === 401
+    ) {
+
+        window.location.href =
+            "/admin/login";
+
+        return;
+
+    }
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            `Calendar request failed: ${response.status}`
+        );
+
+    }
+
+
+    const data =
+        await response.json();
+
+
+    if (!data.success) {
+
+        throw new Error(
+            data.message ||
+            "Unable to load calendar."
+        );
+
+    }
+
+
+    renderCalendar(
+        year,
+        month,
+        data.counts || {}
+    );
+
+}
+
+
+/* ================================================================
+   RENDER CALENDAR
+   ================================================================ */
+
+function renderCalendar(
+    year,
+    month,
+    counts
+) {
+
+    const container =
+        document.getElementById(
+            "calendarDays"
+        );
+
+
+    const titleDate =
+        new Date(
+            year,
+            month - 1,
+            1
+        );
+
+
+    document.getElementById(
+        "monthTitle"
+    ).textContent =
+        titleDate.toLocaleDateString(
+            "en-IN",
+            {
+                month: "long",
+                year: "numeric"
+            }
+        );
+
+
+    const firstDay =
+        new Date(
+            year,
+            month - 1,
+            1
+        )
+        .getDay();
+
+
+    const daysInMonth =
+        new Date(
+            year,
+            month,
+            0
+        )
+        .getDate();
+
+
+    const today =
+        new Date();
+
+
+    let html = "";
+
+
+    for (
+        let i = 0;
+        i < firstDay;
+        i++
+    ) {
+
+        html += `
+            <div class="day empty"></div>
+        `;
+
+    }
+
+
+    for (
+        let day = 1;
+        day <= daysInMonth;
+        day++
+    ) {
+
+        const dateString =
+            `${year}-${String(month).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+
+
+        const count =
+            counts[day] || 0;
+
+
+        const isToday =
+            today.getFullYear() === year &&
+            today.getMonth() === month - 1 &&
+            today.getDate() === day;
+
+
+        const isSelected =
+            selectedDates.has(
+                dateString
+            );
+
+
+        html += `
+
+            <div
+                class="
+                    day
+                    ${isToday ? "today" : ""}
+                    ${isSelected ? "selected" : ""}
+                "
+                onclick="toggleDate('${dateString}')"
+                title="Click to select/deselect ${dateString}"
+            >
+
+                <div class="day-number">
+                    ${day}
+                </div>
+
+                ${
+                    count > 0
+                    ?
+                    `
+                    <div class="day-count">
+                        ${count}
+                    </div>
+                    `
+                    :
+                    ""
+                }
+
+            </div>
+
+        `;
+
+    }
+
+
+    container.innerHTML =
+        html;
+
+
+    updateSelectionInfo();
+
+}
+
+
+/* ================================================================
+   MULTI DATE TOGGLE
+   ================================================================ */
+
+function toggleDate(
+    dateString
+) {
+
+    if (
+        selectedDates.has(
+            dateString
+        )
+    ) {
+
+        selectedDates.delete(
+            dateString
+        );
+
+    }
+    else {
+
+        selectedDates.add(
+            dateString
+        );
+
+    }
+
+
+    updateSelectionInfo();
+
+
+    renderCalendarAfterSelection();
+
+
+    showSelectedDateLeads();
+
+}
+
+
+/* ================================================================
+   RE-RENDER CURRENT MONTH
+   ================================================================ */
+
+async function renderCalendarAfterSelection() {
+
+    try {
+
+        await loadCalendar();
+
+    }
+    catch (error) {
+
+        console.error(
+            "Calendar refresh error:",
+            error
+        );
+
+    }
+
+}
+
+
+/* ================================================================
+   SELECTION INFO
+   ================================================================ */
+
+function updateSelectionInfo() {
+
+    const info =
+        document.getElementById(
+            "selectionInfo"
+        );
+
+
+    const exportButton =
+        document.getElementById(
+            "exportSelectedButton"
+        );
+
+
+    const count =
+        selectedDates.size;
+
+
+    if (
+        count === 0
+    ) {
+
+        info.classList.remove(
+            "has-selection"
+        );
+
+
+        info.innerHTML = `
+
+            <strong>
+                No dates selected
+            </strong>
+
+            <div class="selection-dates">
+                Click dates on the calendar to select multiple dates.
+            </div>
+
+        `;
+
+
+        exportButton.disabled =
+            true;
+
+
+        return;
+
+    }
+
+
+    info.classList.add(
+        "has-selection"
+    );
+
+
+    const sortedDates =
+        Array.from(
+            selectedDates
+        )
+        .sort();
+
+
+    const displayDates =
+        sortedDates
+            .map(
+                date =>
+                    formatReadableDate(
+                        date
+                    )
+            )
+            .join(
+                " • "
+            );
+
+
+    info.innerHTML = `
+
+        <strong>
+            ✓ ${count} date${count === 1 ? "" : "s"} selected
+        </strong>
+
+        <div class="selection-dates">
+            ${escapeHtml(
+                displayDates
+            )}
+        </div>
+
+    `;
+
+
+    exportButton.disabled =
+        false;
+
+
+    exportButton.textContent =
+        `📥 Export ${count} Date${count === 1 ? "" : "s"}`;
+
+}
+
+
+/* ================================================================
+   CLEAR SELECTED DATES
+   ================================================================ */
+
+function clearSelectedDates() {
+
+    selectedDates.clear();
+
+
+    updateSelectionInfo();
+
+
+    renderCalendarAfterSelection();
+
+
+    renderLeads(
+        allLeads
+    );
+
+}
+
+
+/* ================================================================
+   SHOW SELECTED DATE LEADS
+   ================================================================ */
+
+function showSelectedDateLeads() {
+
+    if (
+        selectedDates.size === 0
+    ) {
+
+        renderLeads(
+            allLeads
+        );
+
+        return;
+
+    }
+
+
+    const selectedLeads =
+        allLeads.filter(
+            lead => {
+
+                if (
+                    !lead.created_at
+                ) {
+
+                    return false;
+
+                }
+
+
+                const date =
+                    new Date(
+                        lead.created_at
+                    );
+
+
+                if (
+                    Number.isNaN(
+                        date.getTime()
+                    )
+                ) {
+
+                    return false;
+
+                }
+
+
+                return selectedDates.has(
+                    formatDateKey(
+                        date
+                    )
+                );
+
+            }
+        );
+
+
+    renderLeads(
+        selectedLeads
+    );
+
+}
+
+
+/* ================================================================
+   MULTI DATE CSV EXPORT
+   ================================================================ */
+
+function exportSelectedDates() {
+
+    if (
+        selectedDates.size === 0
+    ) {
+
+        alert(
+            "Please select at least one date."
+        );
+
+        return;
+
+    }
+
+
+    const selectedLeads =
+        allLeads.filter(
+            lead => {
+
+                if (
+                    !lead.created_at
+                ) {
+
+                    return false;
+
+                }
+
+
+                const date =
+                    new Date(
+                        lead.created_at
+                    );
+
+
+                if (
+                    Number.isNaN(
+                        date.getTime()
+                    )
+                ) {
+
+                    return false;
+
+                }
+
+
+                return selectedDates.has(
+                    formatDateKey(
+                        date
+                    )
+                );
+
+            }
+        );
+
+
+    if (
+        selectedLeads.length === 0
+    ) {
+
+        alert(
+            "No enquiries were found for the selected dates."
+        );
+
+        return;
+
+    }
+
+
+    const sortedDates =
+        Array.from(
+            selectedDates
+        )
+        .sort();
+
+
+    const rows = [
+
+        [
+            "ID",
+            "Name",
+            "Phone",
+            "Email",
+            "Qualification",
+            "Career Goal",
+            "Experience",
+            "Course",
+            "Training Mode",
+            "Message",
+            "Created Date"
+        ]
+
+    ];
+
+
+    selectedLeads.forEach(
+        lead => {
+
+            rows.push([
+
+                lead.id || "",
+
+                lead.name || "",
+
+                lead.phone || "",
+
+                lead.email || "",
+
+                lead.qualification || "",
+
+                lead.career_goal || "",
+
+                lead.experience || "",
+
+                lead.course || "",
+
+                lead.training_mode || "",
+
+                lead.message || "",
+
+                lead.created_at || ""
+
+            ]);
+
+        }
+    );
+
+
+    const csv =
+        rows
+            .map(
+                row =>
+                    row
+                        .map(
+                            value =>
+                                csvEscape(
+                                    value
+                                )
+                        )
+                        .join(",")
+            )
+            .join("\r\n");
+
+
+    const blob =
+        new Blob(
+            [
+                "\ufeff" +
+                csv
+            ],
+            {
+                type:
+                    "text/csv;charset=utf-8;"
+            }
+        );
+
+
+    const url =
+        URL.createObjectURL(
+            blob
+        );
+
+
+    const link =
+        document.createElement(
+            "a"
+        );
+
+
+    link.href =
+        url;
+
+
+    const firstDate =
+        sortedDates[0];
+
+
+    const lastDate =
+        sortedDates[
+            sortedDates.length - 1
+        ];
+
+
+    link.download =
+        `vamadeva-enquiries-${firstDate}-to-${lastDate}.csv`;
+
+
+    document.body.appendChild(
+        link
+    );
+
+
+    link.click();
+
+
+    document.body.removeChild(
+        link
+    );
+
+
+    URL.revokeObjectURL(
+        url
+    );
+
+
+    alert(
+        `${selectedLeads.length} enquiries exported from ${selectedDates.size} selected date${selectedDates.size === 1 ? "" : "s"}.`
+    );
+
+}
+
+
+/* ================================================================
+   CSV ESCAPE
+   ================================================================ */
+
+function csvEscape(
+    value
+) {
+
+    const stringValue =
+        String(
+            value ?? ""
+        );
+
+
+    return `"${stringValue
+        .replace(
+            /"/g,
+            '""'
+        )
+    }"`;
+
+}
+
+
+/* ================================================================
+   MONTH CHANGE
+   ================================================================ */
+
+async function changeMonth(
+    amount
+) {
+
+    currentCalendarDate =
+        new Date(
+            currentCalendarDate
+                .getFullYear(),
+
+            currentCalendarDate
+                .getMonth() +
+                amount,
+
+            1
+        );
+
+
+    try {
+
+        await loadCalendar();
+
+    }
+    catch (error) {
+
+        console.error(
+            "Calendar error:",
+            error
+        );
+
+    }
+
+}
+
+
+/* ================================================================
+   REFRESH
+   ================================================================ */
+
+async function refreshDashboard(
+    event
+) {
+
+    if (event) {
+
+        event.preventDefault();
+
+    }
+
+
+    if (
+        isRefreshing
+    ) {
+
+        return;
+
+    }
+
+
+    isRefreshing =
+        true;
+
+
+    const button =
+        document.getElementById(
+            "refreshButton"
+        );
+
+
+    button.disabled =
+        true;
+
+
+    button.innerHTML =
+        "⟳ Refreshing...";
+
+
+    try {
+
+        const success =
+            await loadDashboard();
+
+
+        if (!success) {
+
+            throw new Error(
+                "Refresh failed."
+            );
+
+        }
+
+
+        button.innerHTML =
+            "✓ Updated";
+
+
+        setTimeout(
+            () => {
+
+                button.innerHTML =
+                    "↻ Refresh";
+
+            },
+            1000
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            "Refresh error:",
+            error
+        );
+
+
+        button.innerHTML =
+            "⚠ Failed";
+
+
+        setTimeout(
+            () => {
+
+                button.innerHTML =
+                    "↻ Refresh";
+
+            },
+            1500
+        );
+
+
+        alert(
+            "Unable to refresh the dashboard."
+        );
+
+    }
+    finally {
+
+        button.disabled =
+            false;
+
+        isRefreshing =
+            false;
+
+    }
+
+}
+
+
+/* ================================================================
+   EXPORT ALL
+   ================================================================ */
+
+function exportCSV() {
+
+    window.location.href =
+        "/admin/export.csv";
+
+}
+
+
+/* ================================================================
+   CHATBOT
+   ================================================================ */
+
+function openChatbot() {
+
+    window.open(
+        "/",
+        "_blank"
+    );
+
+}
+
+
+/* ================================================================
+   LOGOUT
+   ================================================================ */
+
+async function logoutAdmin() {
+
+    const confirmed =
+        confirm(
+            "Are you sure you want to logout?"
+        );
+
+
+    if (!confirmed) {
+
+        return;
+
+    }
+
+
+    try {
+
+        const response =
+            await fetch(
+                "/admin/logout",
+                {
+                    method: "POST",
+                    credentials: "same-origin"
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            data.success
+        ) {
+
+            window.location.href =
+                "/admin/login";
+
+            return;
+
+        }
+
+
+        alert(
+            data.message ||
+            "Logout failed."
+        );
+
+    }
+    catch (error) {
+
+        console.error(
+            "Logout error:",
+            error
+        );
+
+
+        alert(
+            "Unable to logout."
+        );
+
+    }
+
+}
+
+
+/* ================================================================
+   NAVIGATION
+   ================================================================ */
+
+function scrollToSection(
+    sectionId,
+    button
+) {
+
+    const element =
+        document.getElementById(
+            sectionId
+        );
+
+
+    if (
+        element
+    ) {
+
+        element.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+        });
+
+    }
+
+
+    document
+        .querySelectorAll(
+            ".nav-item"
+        )
+        .forEach(
+            item => {
+
+                item.classList.remove(
+                    "active"
+                );
+
+            }
+        );
+
+
+    if (
+        button
+    ) {
+
+        button.classList.add(
+            "active"
+        );
+
+    }
+
+}
+
+
+/* ================================================================
+   DATE KEY
+   ================================================================ */
+
+function formatDateKey(
+    date
+) {
+
+    const year =
+        date.getFullYear();
+
+
+    const month =
+        String(
+            date.getMonth() + 1
+        )
+        .padStart(
+            2,
+            "0"
+        );
+
+
+    const day =
+        String(
+            date.getDate()
+        )
+        .padStart(
+            2,
+            "0"
+        );
+
+
+    return `${year}-${month}-${day}`;
+
+}
+
+
+/* ================================================================
+   READABLE DATE
+   ================================================================ */
+
+function formatReadableDate(
+    dateString
+) {
+
+    const date =
+        new Date(
+            `${dateString}T00:00:00`
+        );
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return dateString;
+
+    }
+
+
+    return date.toLocaleDateString(
+        "en-IN",
+        {
+            day: "2-digit",
+            month: "short",
+            year: "numeric"
+        }
+    );
+
+}
+
+
+/* ================================================================
+   FORMAT DATETIME
+   ================================================================ */
+
+function formatDate(
+    value
+) {
+
+    if (!value) {
+
+        return "-";
+
+    }
+
+
+    const date =
+        new Date(
+            value
+        );
+
+
+    if (
+        Number.isNaN(
+            date.getTime()
+        )
+    ) {
+
+        return value;
+
+    }
+
+
+    return date.toLocaleString(
+        "en-IN",
+        {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit"
+        }
+    );
+
+}
+
+
+/* ================================================================
+   ESCAPE HTML
+   ================================================================ */
+
+function escapeHtml(
+    value
+) {
+
+    return String(
+        value
+    )
+
+        .replace(
+            /&/g,
+            "&amp;"
+        )
+
+        .replace(
+            /</g,
+            "&lt;"
+        )
+
+        .replace(
+            />/g,
+            "&gt;"
+        )
+
+        .replace(
+            /"/g,
+            "&quot;"
+        )
+
+        .replace(
+            /'/g,
+            "&#039;"
+        );
+
+}
+
+
+/* ================================================================
+   INITIALIZE
+   ================================================================ */
+
+window.addEventListener(
+    "load",
+    function() {
+
+        loadDashboard();
+
+    }
+);
+
+</script>
+
+
+</body>
+
+</html>
