@@ -884,6 +884,99 @@ function isQuitCommand(
 // SEND MESSAGE
 // ============================================================
 
+// ============================================================
+// ENQUIRY INTENT DETECTION
+// ============================================================
+
+function isEnquiryIntent(value) {
+
+    const q = String(value || "")
+        .toLowerCase()
+        .trim();
+
+    if (!q) {
+        return false;
+    }
+
+    const enquiryPatterns = [
+        /\benquir(y|e|ies)\b/,
+        /\bi\s+(want|would like|need)\s+to\s+(join|enroll|register|apply)\b/,
+        /\bi\s+want\s+(to\s+)?join\b/,
+        /\bi\s+am\s+interested\s+in\s+(joining|enrolling|registering)\b/,
+        /\bi'?m\s+interested\s+in\s+(joining|enrolling|registering)\b/,
+        /\bhow\s+(can|do)\s+i\s+(join|enroll|register|apply)\b/,
+        /\bhow\s+do\s+i\s+register\b/,
+        /\bi\s+want\s+admission\b/,
+        /\bi\s+need\s+admission\b/,
+        /\bi\s+want\s+a\s+callback\b/,
+        /\bcall\s+me\b/,
+        /\bcontact\s+me\b/,
+        /\btalk\s+to\s+(a\s+)?(counsell?or|counselor|advisor|consultant|person|team)\b/,
+        /\bspeak\s+to\s+(a\s+)?(counsell?or|counselor|advisor|consultant|person|team)\b/,
+        /\bi\s+want\s+to\s+apply\b/,
+        /\bi\s+want\s+to\s+register\b/,
+        /\bi\s+want\s+to\s+enroll\b/,
+        /\bi\s+would\s+like\s+to\s+join\b/
+    ];
+
+    return enquiryPatterns.some(
+        pattern => pattern.test(q)
+    );
+}
+
+
+function detectCourseFromText(value) {
+
+    const q = String(value || "").toLowerCase();
+
+    const courses = [
+        "Power BI",
+        "Python",
+        "Snowflake",
+        "Data Engineering",
+        "MS SQL",
+        "SSIS",
+        "SAP Security",
+        "SAP GRC",
+        "Looker BI",
+        "Fabric Administration",
+        "Software Training"
+    ];
+
+    const matches = courses.filter(course =>
+        q.includes(course.toLowerCase())
+    );
+
+    matches.sort(
+        (a, b) => b.length - a.length
+    );
+
+    return matches.length ? matches[0] : null;
+}
+
+
+function startEnquiryFromMessage(value) {
+
+    const detectedCourse =
+        detectCourseFromText(value);
+
+    if (detectedCourse) {
+        currentCourse = detectedCourse;
+    }
+
+    addMessage(
+        value,
+        "user"
+    );
+
+    startLeadFlow();
+}
+
+
+// ============================================================
+// SEND MESSAGE
+// ============================================================
+
 async function sendMessage() {
 
     if (isWaiting) {
@@ -919,6 +1012,20 @@ async function sendMessage() {
         addMessage(
             "No problem. The enquiry process has been cancelled. You can continue our conversation normally.",
             "bot"
+        );
+
+        return;
+    }
+
+
+    // --------------------------------------------------------
+    // GLOBAL ENQUIRY DETECTION
+    // --------------------------------------------------------
+    // A visitor can start an enquiry from anywhere in the chat.
+    if (isEnquiryIntent(value)) {
+
+        startEnquiryFromMessage(
+            value
         );
 
         return;
@@ -1173,8 +1280,14 @@ function startLeadFlow() {
     };
 
 
+    const courseText = currentCourse
+        ? ` I can also record this enquiry for **${currentCourse}**.`
+        : "";
+
     addMessage(
-        "Sure! I can help you with course selection and an enquiry. I'll ask a few quick questions. You can type **quit** at any time to cancel.",
+        "Sure! I can help you with your enquiry." +
+        courseText +
+        " I'll ask a few quick questions. You can type **quit** at any time to cancel.",
         "bot"
     );
 
@@ -1381,11 +1494,31 @@ async function processLeadMessage(
         );
 
 
-        leadStep =
-            "recommendation";
+        if (leadData.course) {
 
+            leadStep =
+                "trainingMode";
 
-        await generateRecommendation();
+            addMessage(
+                "Since you are enquiring about **" +
+                leadData.course +
+                "**, we'll use that course for your enquiry.",
+                "bot"
+            );
+
+            addMessage(
+                "Would you prefer online or offline/classroom training?",
+                "bot"
+            );
+
+        } else {
+
+            leadStep =
+                "recommendation";
+
+            await generateRecommendation();
+
+        }
 
 
         return;

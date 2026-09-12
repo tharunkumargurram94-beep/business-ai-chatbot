@@ -175,7 +175,7 @@ def repair_mojibake(text):
         â€œ
         â€
         â€“
-        â€”
+        â€” 
         â†’
     """
 
@@ -833,207 +833,316 @@ def store_snowflake_curriculum():
 
 
 # ============================================================
-# CRAWLER
+# AUTOMATIC CHANGE-DETECTION CRAWLER
 # ============================================================
 
-def crawl_website(
-    start_url=START_URL,
-    max_pages=MAX_PAGES,
-):
-    """
-    Crawl the website and store its content.
-    """
+STATE_FILE = BASE_DIR / "website_sync_state.json"
+SYNC_INTERVAL_SECONDS = 3 * 60 * 60
 
-    start_url = normalize_url(
-        start_url
+
+def load_sync_state():
+    if not STATE_FILE.exists():
+        return {
+            "pages": {},
+            "curriculum": {},
+            "last_sync": None,
+        }
+
+    try:
+        import json
+        return json.loads(STATE_FILE.read_text(encoding="utf-8"))
+    except Exception as error:
+        print(f"[AUTO SYNC] Could not read state file: {error}")
+        return {
+            "pages": {},
+            "curriculum": {},
+            "last_sync": None,
+        }
+
+
+def save_sync_state(state):
+    import json
+    temp_file = STATE_FILE.with_suffix(".tmp")
+    temp_file.write_text(
+        json.dumps(state, indent=2, ensure_ascii=False),
+        encoding="utf-8",
     )
+    temp_file.replace(STATE_FILE)
 
-    queue = deque([
-        start_url
-    ])
 
+def content_hash(text):
+    return hashlib.sha256(
+        (text or "").encode("utf-8")
+    ).hexdigest()
+
+
+def delete_source(source, source_type):
+    try:
+        existing = collection.get(
+            where={
+                "$and": [
+                    {"source": source},
+                    {"source_type": source_type},
+                ]
+            },
+            include=[],
+        )
+        ids = existing.get("ids", [])
+        if ids:
+            collection.delete(ids=ids)
+        return len(ids)
+    except Exception as error:
+        print(
+            f"[AUTO SYNC] Could not delete old chunks for {source}: {error}"
+        )
+        raise
+
+
+
+def get_source_ids(source, source_type):
+    existing = collection.get(
+        where={
+            "$and": [
+                {"source": source},
+                {"source_type": source_type},
+            ]
+        },
+        include=[],
+    )
+    return existing.get("ids", [])
+
+
+def replace_source(source, title, text, source_type):
+    """Upsert new chunks first, then remove obsolete old chunks."""
+    old_ids = set(get_source_ids(source, source_type))
+    stored = store_document(source, title, text, source_type=source_type)
+    current_ids = set(get_source_ids(source, source_type))
+    obsolete_ids = list(old_ids - current_ids)
+    if obsolete_ids:
+        collection.delete(ids=obsolete_ids)
+    return stored
+
+def discover_website(start_url=START_URL, max_pages=MAX_PAGES):
+    """Download the site and return successfully read pages and links."""
+    start_url = normalize_url(start_url)
+    queue = deque([start_url])
     visited = set()
+    pages = {}
+    failed_urls = set()
 
-    pages_crawled = 0
-
-    chunks_stored = 0
-
-    print()
-    print("=" * 60)
-    print(
-        "VAMADEVA WEBSITE CRAWLER"
-    )
-    print("=" * 60)
-    print()
-    print(
-        f"Starting URL: {start_url}"
-    )
-    print(
-        f"Maximum pages: {max_pages}"
-    )
-    print()
-
-    # Remove only old website data. Existing local PDFs such as
-    # fabric-admin.pdf remain untouched.
-    delete_existing_website_data()
-
-    while queue and pages_crawled < max_pages:
-
+    while queue and len(pages) < max_pages:
         url = queue.popleft()
 
         if url in visited:
             continue
-
         visited.add(url)
 
-        if not is_same_domain(
-            url,
-            start_url,
-        ):
+        if not is_same_domain(url, start_url):
             continue
-
         if not should_crawl(url):
             continue
-
-        # ----------------------------------------------------
-        # PDF
-        # ----------------------------------------------------
-
         if is_pdf_url(url):
-
-            print(
-                f"[PDF] {url}"
-            )
-
-            pdf_text = download_pdf(
-                url
-            )
-
-            if pdf_text:
-
-                stored = store_document(
-                    url,
-                    Path(
-                        urlparse(url).path
-                    ).name,
-                    pdf_text,
-                    source_type="website_pdf",
-                )
-
-                print(
-                    f"  Stored: {stored} chunks"
-                )
-
-                chunks_stored += stored
-
-            time.sleep(
-                REQUEST_DELAY
-            )
-
             continue
 
-        # ----------------------------------------------------
-        # HTML
-        # ----------------------------------------------------
-
-        print(
-            f"[{pages_crawled + 1}/{max_pages}] "
-            f"Crawling: {url}"
-        )
-
-        html = download_page(
-            url
-        )
+        print(f"  Checking: {url}")
+        html = download_page(url)
 
         if not html:
+            failed_urls.add(url)
             continue
 
-        title, text, links = (
-            extract_page_content(
-                html,
-                url,
-            )
-        )
+        title, text, links = extract_page_content(html, url)
 
-        if not text:
-
-            print(
-                "  No readable text found."
-            )
-
+        if text:
+            pages[url] = {
+                "title": title,
+                "text": text,
+                "hash": content_hash(title + "\n" + text),
+            }
         else:
+            pages[url] = {
+                "title": title,
+                "text": "",
+                "hash": content_hash(title),
+            }
 
-            print(
-                f"  Title: {title}"
-            )
-
-            print(
-                f"  Text: {len(text)} characters"
-            )
-
-            stored = store_document(
-                url,
-                title,
-                text,
-                source_type="website",
-            )
-
-            print(
-                f"  Stored: {stored} chunks"
-            )
-
-            chunks_stored += stored
-
-        pages_crawled += 1
-
-        # Add new links to queue.
         for link in sorted(links):
+            if link not in visited and is_same_domain(link, start_url):
+                queue.append(link)
 
-            if link not in visited:
+        time.sleep(REQUEST_DELAY)
 
-                if is_same_domain(
-                    link,
-                    start_url,
-                ):
+    return pages, failed_urls
 
-                    queue.append(
-                        link
-                    )
 
-        time.sleep(
-            REQUEST_DELAY
+def sync_website_once():
+    """Run one incremental website synchronization."""
+    from datetime import datetime
+
+    print()
+    print("=" * 60)
+    print("VAMADEVA AUTOMATIC KNOWLEDGE SYNC")
+    print("=" * 60)
+    print("Checking website for changes...")
+
+    state = load_sync_state()
+    old_pages = state.get("pages", {})
+
+    pages, failed_urls = discover_website()
+
+    changed = 0
+    unchanged = 0
+    added = 0
+    removed = 0
+    chunks_added = 0
+
+    for url, page in pages.items():
+        old = old_pages.get(url)
+
+        if old and old.get("hash") == page["hash"]:
+            unchanged += 1
+            continue
+
+        if old:
+            print(f"  CHANGED: {url}")
+            changed += 1
+        else:
+            print(f"  NEW: {url}")
+            added += 1
+
+        stored = replace_source(
+            url,
+            page["title"],
+            page["text"],
+            source_type="website",
+        )
+        chunks_added += stored
+
+    # Only remove pages when the crawl was complete enough to make
+    # a reliable deletion decision. A failed request must not erase
+    # good knowledge from ChromaDB.
+    if not failed_urls:
+        current_urls = set(pages.keys())
+        for old_url in set(old_pages.keys()) - current_urls:
+            print(f"  REMOVED: {old_url}")
+            delete_source(old_url, "website")
+            removed += 1
+            old_pages.pop(old_url, None)
+    else:
+        print(
+            f"  {len(failed_urls)} page(s) could not be checked; "
+            "skipping deletion of missing pages."
         )
 
-    # Always explicitly index the official Snowflake PDF.
-    # This protects us if the PDF link is not discovered by
-    # the website crawler.
-    snowflake_chunks = (
-        store_snowflake_curriculum()
+    # Save successful page fingerprints.
+    new_state_pages = dict(old_pages)
+    for url, page in pages.items():
+        new_state_pages[url] = {
+            "hash": page["hash"],
+            "title": page["title"],
+        }
+
+    # Official Snowflake curriculum PDF is checked separately.
+    curriculum_changed = sync_snowflake_curriculum(state)
+
+    state["pages"] = new_state_pages
+    state["last_sync"] = datetime.now().isoformat(timespec="seconds")
+    save_sync_state(state)
+
+    print()
+    print("SYNC COMPLETED")
+    print(f"  Pages checked: {len(pages)}")
+    print(f"  Unchanged: {unchanged}")
+    print(f"  New: {added}")
+    print(f"  Changed: {changed}")
+    print(f"  Removed: {removed}")
+    print(f"  Website chunks updated: {chunks_added}")
+    print(f"  Snowflake curriculum changed: {'YES' if curriculum_changed else 'NO'}")
+    print(f"  Next automatic check: 3 hours")
+    print()
+
+    return {
+        "pages_checked": len(pages),
+        "unchanged": unchanged,
+        "new": added,
+        "changed": changed,
+        "removed": removed,
+        "chunks_added": chunks_added,
+        "curriculum_changed": curriculum_changed,
+    }
+
+
+def sync_snowflake_curriculum(state):
+    """Update the official Snowflake curriculum only when its content changes."""
+    print("  Checking official Snowflake curriculum...")
+
+    text = download_pdf(SNOWFLAKE_CURRICULUM_URL)
+    if not text:
+        print("  Snowflake curriculum check failed; keeping existing data.")
+        return False
+
+    title = "Vamadeva Snowflake Training Official Curriculum"
+    document_text = (
+        "Vamadeva Techno Solutions - "
+        "Snowflake Training Official Curriculum. "
+        + text
+    )
+    current_hash = content_hash(document_text)
+    old = state.get("curriculum", {})
+
+    if old.get("hash") == current_hash:
+        print("  Snowflake curriculum: unchanged")
+        return False
+
+    if old:
+        print("  Snowflake curriculum: CHANGED")
+    else:
+        print("  Snowflake curriculum: NEW")
+
+    stored = replace_source(
+        SNOWFLAKE_CURRICULUM_URL,
+        title,
+        document_text,
+        source_type="website_curriculum",
     )
 
-    chunks_stored += (
-        snowflake_chunks
-    )
+    print(f"  Snowflake curriculum chunks updated: {stored}")
 
+    state["curriculum"] = {
+        "hash": current_hash,
+        "title": title,
+    }
+    return True
+
+
+def run_once():
+    try:
+        return sync_website_once()
+    except Exception as error:
+        print()
+        print("[AUTO SYNC ERROR]")
+        print(error)
+        print("Existing ChromaDB knowledge has been left in place where possible.")
+        return None
+
+
+def run_forever():
+    """Run immediately, then repeat every 3 hours."""
     print()
-    print("=" * 60)
-    print(
-        "CRAWLING COMPLETED"
-    )
-    print("=" * 60)
+    print("VAMADEVA AUTO SYNC STARTED")
+    print("Automatic change detection: every 3 hours")
+    print("Press CTRL+C to stop.")
     print()
-    print(
-        f"Pages crawled: {pages_crawled}"
-    )
-    print(
-        f"Chunks stored: {chunks_stored}"
-    )
-    print()
-    print(
-        "Website and official Snowflake curriculum "
-        "content are now available in ChromaDB."
-    )
-    print()
+
+    while True:
+        run_once()
+        print("[AUTO SYNC] Sleeping for 3 hours...")
+        try:
+            time.sleep(SYNC_INTERVAL_SECONDS)
+        except KeyboardInterrupt:
+            print()
+            print("[AUTO SYNC] Stopped.")
+            break
 
 
 # ============================================================
@@ -1041,5 +1150,4 @@ def crawl_website(
 # ============================================================
 
 if __name__ == "__main__":
-
-    crawl_website()
+    run_forever()

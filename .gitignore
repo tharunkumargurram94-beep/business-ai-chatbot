@@ -2,5 +2,10 @@
 .env
 __pycache__/
 *.pyc
-vectorstore/
+*.pyo
+*.pyd
+
 leads.db
+website_sync_state.json
+
+data/_crawler_temp.pdf

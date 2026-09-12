@@ -11,7 +11,11 @@ from openai import OpenAI
 # ENVIRONMENT
 # ============================================================
 
-load_dotenv()
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+ENV_FILE = BASE_DIR / ".env"
+
+load_dotenv(ENV_FILE)
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
@@ -34,8 +38,6 @@ client = OpenAI(
 # ============================================================
 # PATHS
 # ============================================================
-
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 VECTORSTORE_DIR = BASE_DIR / "vectorstore"
 
@@ -350,7 +352,6 @@ def extract_course_from_history(
     if not conversation_history:
         return None
 
-    # Search recent messages first
     recent_messages = conversation_history[-12:]
 
     for item in reversed(recent_messages):
@@ -363,15 +364,10 @@ def extract_course_from_history(
             ""
         )
 
-        role = item.get(
-            "role",
-            ""
-        )
-
         if not text:
             continue
 
-        detected = detect_course(text)
+        detected = detect_courses(text)
 
         if len(detected) == 1:
             return detected[0]
@@ -452,11 +448,14 @@ def search_local_knowledge(
 
         output = []
 
-        for index, document in enumerate(documents):
+        for index, document in enumerate(
+            documents
+        ):
 
             metadata = {}
 
             if index < len(metadatas):
+
                 metadata = (
                     metadatas[index]
                     or {}
@@ -577,6 +576,7 @@ def filter_results(
             if alias in combined:
 
                 matched.append(result)
+
                 break
 
     return matched[:max_results]
@@ -771,6 +771,7 @@ You help website visitors understand:
 - Company services
 - General technology questions
 
+
 ============================================================
 COURSE CONTEXT
 ============================================================
@@ -803,6 +804,7 @@ Answer specifically for Power BI.
 
 Never mix information from different courses.
 
+
 ============================================================
 CONVERSATION
 ============================================================
@@ -820,6 +822,7 @@ Use it to understand references such as:
 - that training
 
 If the active course is already known, continue using it.
+
 
 ============================================================
 VAMADEVA DATA
@@ -842,6 +845,7 @@ Use it for:
 
 Do not invent Vamadeva-specific information.
 
+
 ============================================================
 FEES
 ============================================================
@@ -859,6 +863,7 @@ structure."
 
 Do not estimate a fee.
 
+
 ============================================================
 DURATION
 ============================================================
@@ -870,6 +875,7 @@ Use supplied Vamadeva information when available.
 If it is not available, clearly say that the current duration
 is not available in the information.
 
+
 ============================================================
 WEB INFORMATION
 ============================================================
@@ -880,24 +886,92 @@ questions and current information.
 Do not use public web information to invent Vamadeva-specific
 fees, promises, or business information.
 
+
 ============================================================
 RESPONSE STYLE
 ============================================================
 
-Be professional and friendly.
+Be professional, friendly, and helpful.
 
-Use simple language.
+Use simple language that a student or website visitor can
+understand.
 
-Use Markdown formatting:
+Keep answers reasonably concise.
+
+Use Markdown formatting when useful.
+
+For headings use:
 
 ### Heading
 
+For important information use:
+
 **Important**
+
+For lists use:
 
 - Point 1
 - Point 2
+- Point 3
 
-Keep answers reasonably concise.
+IMPORTANT FORMATTING RULES:
+
+1. Always use normal spaces between words.
+2. Never join two words together.
+3. Never split a word into separate pieces.
+4. Do not insert spaces inside words.
+5. Use normal punctuation spacing.
+6. Put a space after commas when appropriate.
+7. Put a space after periods when another sentence follows.
+8. Keep technical names correctly spelled.
+9. Keep names such as Python, NumPy, Pandas, Matplotlib,
+   Django, Flask, Power BI, Snowflake, SQL Server, SAP GRC,
+   SAP Security, and Microsoft Fabric correctly formatted.
+10. Do not use unnecessary blank lines.
+11. Do not repeat the user's question unnecessarily.
+12. Do not create overly long introductions.
+13. Give the answer directly.
+
+Correct:
+
+Python is known for its readability.
+
+Correct:
+
+NumPy, Pandas, and Matplotlib are commonly used libraries.
+
+Correct:
+
+Python is suitable for beginners and experienced developers.
+
+Incorrect:
+
+it s readability
+
+Incorrect:
+
+in telligence
+
+Incorrect:
+
+in cluding
+
+Incorrect:
+
+object-or iented
+
+Incorrect:
+
+platform-in dependent
+
+Incorrect:
+
+suitablefor
+
+Incorrect:
+
+forbeginners
+
 
 ============================================================
 NO SOURCE DISPLAY
@@ -917,6 +991,7 @@ Never show:
 
 The user should experience a normal professional chatbot.
 
+
 ============================================================
 IMPORTANT
 ============================================================
@@ -924,6 +999,17 @@ IMPORTANT
 Never fabricate information.
 
 If information is unavailable, say so honestly.
+
+For Vamadeva-specific questions, prefer the supplied
+Vamadeva knowledge over general knowledge.
+
+For general technology questions, provide a clear,
+accurate explanation.
+
+Never mix unrelated course information.
+
+Never claim that Vamadeva provides something unless the
+supplied information supports it.
 """
 
 
@@ -952,6 +1038,7 @@ def generate_rag_answer(
 
         # ====================================================
         # STEP 1
+        # ACTUAL QUESTION
         # ====================================================
 
         actual_question = question.strip()
@@ -964,9 +1051,6 @@ def generate_rag_answer(
         detected_courses = detect_courses(
             actual_question
         )
-
-        # If user explicitly mentions one course,
-        # that course becomes active.
 
         if len(detected_courses) == 1:
 
@@ -1075,9 +1159,6 @@ def generate_rag_answer(
 
                 if not content:
                     continue
-
-                # Don't expose internal metadata
-                # to the model unnecessarily.
 
                 history_parts.append(
                     f"{role.upper()}: {content}"
@@ -1189,7 +1270,7 @@ def generate_rag_answer(
 
         return {
             "answer": (
-                "I'm sorry, I’m having trouble processing "
+                "I'm sorry, I'm having trouble processing "
                 "that request right now. Please try again."
             ),
             "course": current_course,
@@ -1205,7 +1286,10 @@ def clean_answer(answer: str):
     if not answer:
         return ""
 
-    # Remove citation markers
+    # --------------------------------------------------------
+    # REMOVE CITATION MARKERS
+    # --------------------------------------------------------
+
     answer = re.sub(
         r"\[\d+\]",
         "",
@@ -1218,32 +1302,170 @@ def clean_answer(answer: str):
         answer,
     )
 
-    # Remove markdown source heading
+    # --------------------------------------------------------
+    # REMOVE SOURCE HEADING
+    # --------------------------------------------------------
+
     answer = re.sub(
         r"(?im)^sources?:\s*$",
         "",
         answer,
     )
 
-    # Convert markdown links to text
+    # --------------------------------------------------------
+    # CONVERT MARKDOWN LINKS TO TEXT
+    # --------------------------------------------------------
+
     answer = re.sub(
         r"\[([^\]]+)\]\([^)]+\)",
         r"\1",
         answer,
     )
 
-    # Remove raw URLs
+    # --------------------------------------------------------
+    # REMOVE RAW URLS
+    # --------------------------------------------------------
+
     answer = re.sub(
         r"https?://\S+",
         "",
         answer,
     )
 
-    # Remove excessive blank lines
+    # --------------------------------------------------------
+    # FIX PUNCTUATION SPACING
+    # --------------------------------------------------------
+
+    # Remove spaces before punctuation.
+    answer = re.sub(
+        r"[ \t]+([,.;:!?])",
+        r"\1",
+        answer,
+    )
+
+    # Add a space after commas when missing.
+    answer = re.sub(
+        r",(?=[A-Za-z0-9])",
+        ", ",
+        answer,
+    )
+
+    # Add a space after semicolons when missing.
+    answer = re.sub(
+        r";(?=[A-Za-z0-9])",
+        "; ",
+        answer,
+    )
+
+    # Add a space after colons when missing.
+    answer = re.sub(
+        r":(?=[A-Za-z0-9])",
+        ": ",
+        answer,
+    )
+
+    # --------------------------------------------------------
+    # FIX ONLY VERY CLEAR WORD-JOINING ERRORS
+    # --------------------------------------------------------
+    #
+    # DO NOT use generic rules such as:
+    #
+    # "it" -> "it "
+    # "in" -> "in "
+    # "for" -> "for "
+    #
+    # because those can corrupt valid words such as:
+    #
+    # its
+    # intelligence
+    # including
+    # industry
+    #
+    # Only clearly identifiable formatting mistakes are fixed.
+
+    replacements = {
+
+        "suitablefor": "suitable for",
+        "forbeginners": "for beginners",
+
+        "NumPy,Pandas": "NumPy, Pandas",
+        "numpy,pandas": "NumPy, Pandas",
+
+        "Pandas,Matplotlib": "Pandas, Matplotlib",
+        "pandas,matplotlib": "Pandas, Matplotlib",
+
+        "andPandas": "and Pandas",
+        "andNumPy": "and NumPy",
+        "andMatplotlib": "and Matplotlib",
+
+        "MachineLearning": "Machine Learning",
+        "DataScience": "Data Science",
+        "WebDevelopment": "Web Development",
+        "SoftwareDevelopment": "Software Development",
+        "SystemAdministration": "System Administration",
+        "DatabaseProgramming": "Database Programming",
+        "NetworkProgramming": "Network Programming",
+
+        "OpenSource": "Open Source",
+        "GeneralPurpose": "General-Purpose",
+
+        "object-or iented": "object-oriented",
+        "platform-in dependent": "platform-independent",
+
+        "be ginners": "beginners",
+        "in telligence": "intelligence",
+        "in cluding": "including",
+    }
+
+    for old, new in replacements.items():
+
+        answer = answer.replace(
+            old,
+            new,
+        )
+
+    # --------------------------------------------------------
+    # CLEAN MULTIPLE SPACES
+    # --------------------------------------------------------
+
+    answer = re.sub(
+        r"[ \t]{2,}",
+        " ",
+        answer,
+    )
+
+    # --------------------------------------------------------
+    # CLEAN SPACES ON EMPTY LINES
+    # --------------------------------------------------------
+
+    answer = re.sub(
+        r"\n[ \t]+",
+        "\n",
+        answer,
+    )
+
+    # --------------------------------------------------------
+    # LIMIT EXCESSIVE BLANK LINES
+    # --------------------------------------------------------
+
     answer = re.sub(
         r"\n{3,}",
         "\n\n",
         answer,
     )
+
+    # --------------------------------------------------------
+    # CLEAN MARKDOWN BULLET SPACING
+    # --------------------------------------------------------
+
+    answer = re.sub(
+        r"(?m)^[ \t]+([-*])",
+        r"\1",
+        answer,
+    )
+
+    # --------------------------------------------------------
+    # FINAL CLEANUP
+    # --------------------------------------------------------
 
     return answer.strip()

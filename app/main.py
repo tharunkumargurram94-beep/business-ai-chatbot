@@ -1,20 +1,16 @@
 import os
-import csv
 import io
+import csv
 import time
 import hmac
-import base64
 import hashlib
+import base64
+
 from pathlib import Path
-from typing import Optional
 
 from dotenv import load_dotenv
 
-from fastapi import (
-    FastAPI,
-    Request,
-    HTTPException,
-)
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import (
     FileResponse,
     JSONResponse,
@@ -22,70 +18,10 @@ from fastapi.responses import (
     StreamingResponse,
 )
 from fastapi.middleware.cors import CORSMiddleware
+
 from pydantic import BaseModel
 
-
-# ================================================================
-# PROJECT PATHS
-# ================================================================
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-APP_DIR = BASE_DIR / "app"
-
-FRONTEND_DIR = BASE_DIR / "frontend"
-
-DATA_DIR = BASE_DIR / "data"
-
-VECTORSTORE_DIR = BASE_DIR / "vectorstore"
-
-
-# ================================================================
-# ENVIRONMENT
-# ================================================================
-
-load_dotenv(
-    BASE_DIR / ".env"
-)
-
-
-OPENAI_API_KEY = os.getenv(
-    "OPENAI_API_KEY"
-)
-
-
-# ================================================================
-# ADMIN SETTINGS
-# ================================================================
-
-ADMIN_USERNAME = os.getenv(
-    "ADMIN_USERNAME",
-    "admin"
-)
-
-ADMIN_PASSWORD = os.getenv(
-    "ADMIN_PASSWORD",
-    ""
-)
-
-ADMIN_SESSION_SECRET = os.getenv(
-    "ADMIN_SESSION_SECRET",
-    ""
-)
-
-
-ADMIN_COOKIE_NAME = (
-    "vamadeva_admin_session"
-)
-
-ADMIN_SESSION_DURATION = (
-    8 * 60 * 60
-)
-
-
-# ================================================================
-# IMPORT DATABASE
-# ================================================================
+from app.rag import generate_rag_answer
 
 from app.database import (
     initialize_database,
@@ -98,20 +34,30 @@ from app.database import (
 
 
 # ================================================================
-# IMPORT RAG
+# BASE DIRECTORY
 # ================================================================
 
-from app.rag import (
-    generate_rag_answer,
-)
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+FRONTEND_DIR = BASE_DIR / "frontend"
+
+ENV_FILE = BASE_DIR / ".env"
 
 
 # ================================================================
-# FASTAPI
+# LOAD ENVIRONMENT VARIABLES
+# ================================================================
+
+load_dotenv(ENV_FILE)
+
+
+# ================================================================
+# FASTAPI APP
 # ================================================================
 
 app = FastAPI(
-    title="Vamadeva Business AI Chatbot",
+    title="Vamadeva AI Assistant",
+    description="AI chatbot and enquiry management system for Vamadeva Techno Solutions.",
     version="1.0.0",
 )
 
@@ -130,233 +76,185 @@ app.add_middleware(
 
 
 # ================================================================
-# STARTUP
+# ADMIN CONFIGURATION
 # ================================================================
 
-@app.on_event("startup")
-def startup_event():
+ADMIN_USERNAME = os.getenv(
+    "ADMIN_USERNAME",
+    "admin",
+)
 
-    initialize_database()
+ADMIN_PASSWORD = os.getenv(
+    "ADMIN_PASSWORD",
+    "",
+)
 
-    print(
-        "[APP] Database initialized successfully."
-    )
+ADMIN_SESSION_SECRET = os.getenv(
+    "ADMIN_SESSION_SECRET",
+    "change-this-development-secret",
+)
+
+ADMIN_COOKIE_NAME = "vamadeva_admin_session"
+
+ADMIN_SESSION_DURATION = 8 * 60 * 60
 
 
 # ================================================================
-# BASIC MODELS
+# DATABASE INITIALIZATION
+# ================================================================
+
+initialize_database()
+
+
+# ================================================================
+# REQUEST MODELS
 # ================================================================
 
 class ChatRequest(BaseModel):
-
     message: str
 
-    course: Optional[str] = None
+    course: str | None = None
 
-    current_course: Optional[str] = None
+    current_course: str | None = None
 
-    conversation_history: Optional[list] = None
+    conversation_history: list = []
 
 
 class LeadRequest(BaseModel):
-
     name: str
 
     phone: str
 
-    email: Optional[str] = None
+    email: str | None = None
 
-    qualification: Optional[str] = None
+    qualification: str | None = None
 
-    career_goal: Optional[str] = None
+    career_goal: str | None = None
 
-    experience: Optional[str] = None
+    experience: str | None = None
 
-    course: Optional[str] = None
+    course: str | None = None
 
-    training_mode: Optional[str] = None
+    training_mode: str | None = None
 
-    message: Optional[str] = None
+    message: str | None = None
 
 
 class AdminLoginRequest(BaseModel):
-
     username: str
 
     password: str
 
 
 # ================================================================
-# ADMIN SESSION FUNCTIONS
+# ADMIN SESSION HELPERS
 # ================================================================
 
 def create_admin_session():
+    """
+    Creates a signed admin session token.
 
-    if not ADMIN_SESSION_SECRET:
+    The token contains:
+        timestamp.signature
+    """
 
-        raise RuntimeError(
-            "ADMIN_SESSION_SECRET is not configured."
-        )
-
-
-    timestamp = str(
-        int(time.time())
-    )
-
+    timestamp = str(int(time.time()))
 
     message = (
-        f"admin:{timestamp}"
+        ADMIN_USERNAME
+        + ":"
+        + timestamp
     )
 
-
     signature = hmac.new(
-        ADMIN_SESSION_SECRET.encode(
-            "utf-8"
-        ),
-        message.encode(
-            "utf-8"
-        ),
+        ADMIN_SESSION_SECRET.encode("utf-8"),
+        message.encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
 
-
-    raw_token = (
-        f"{message}:{signature}"
+    token = (
+        timestamp
+        + "."
+        + signature
     )
 
-
-    token = base64.urlsafe_b64encode(
-        raw_token.encode(
-            "utf-8"
-        )
-    ).decode(
-        "utf-8"
-    )
+    return base64.urlsafe_b64encode(
+        token.encode("utf-8")
+    ).decode("utf-8")
 
 
-    return token
-
-
-def verify_admin_session(
-    token: Optional[str]
-):
-
+def verify_admin_session(token: str | None):
     if not token:
-
         return False
-
-
-    if not ADMIN_SESSION_SECRET:
-
-        return False
-
 
     try:
+        decoded = base64.urlsafe_b64decode(
+            token.encode("utf-8")
+        ).decode("utf-8")
 
-        decoded = (
-            base64.urlsafe_b64decode(
-                token.encode(
-                    "utf-8"
-                )
-            )
-            .decode(
-                "utf-8"
-            )
-        )
+        parts = decoded.split(".")
 
-
-        parts = decoded.split(":")
-
-
-        if len(parts) != 3:
-
+        if len(parts) != 2:
             return False
 
+        timestamp = parts[0]
 
-        role = parts[0]
+        provided_signature = parts[1]
 
-        timestamp = parts[1]
+        timestamp_int = int(timestamp)
 
-        signature = parts[2]
-
-
-        if role != "admin":
-
-            return False
-
-
-        timestamp_int = int(
-            timestamp
-        )
-
-
-        current_time = int(
-            time.time()
-        )
-
+        current_time = int(time.time())
 
         if (
-            current_time -
-            timestamp_int
+            current_time - timestamp_int
             > ADMIN_SESSION_DURATION
         ):
-
             return False
 
+        if timestamp_int > current_time:
+            return False
 
         message = (
-            f"admin:{timestamp}"
+            ADMIN_USERNAME
+            + ":"
+            + timestamp
         )
 
-
         expected_signature = hmac.new(
-            ADMIN_SESSION_SECRET.encode(
-                "utf-8"
-            ),
-            message.encode(
-                "utf-8"
-            ),
+            ADMIN_SESSION_SECRET.encode("utf-8"),
+            message.encode("utf-8"),
             hashlib.sha256,
         ).hexdigest()
 
-
         return hmac.compare_digest(
-            signature,
-            expected_signature
+            provided_signature,
+            expected_signature,
         )
 
-
     except Exception:
-
         return False
 
 
 def is_admin_authenticated(
-    request: Request
+    request: Request,
 ):
-
     token = request.cookies.get(
         ADMIN_COOKIE_NAME
     )
 
-    return verify_admin_session(
-        token
-    )
+    return verify_admin_session(token)
 
 
 def require_admin(
-    request: Request
+    request: Request,
 ):
-
-    if not is_admin_authenticated(
-        request
-    ):
+    if not is_admin_authenticated(request):
 
         return JSONResponse(
             status_code=401,
             content={
                 "success": False,
-                "message": "Admin login required.",
+                "message": "Admin authentication required.",
             },
         )
 
@@ -364,25 +262,24 @@ def require_admin(
 
 
 # ================================================================
-# PUBLIC FRONTEND
+# HOME
 # ================================================================
 
 @app.get("/")
 def home():
 
     index_file = (
-        FRONTEND_DIR /
+        FRONTEND_DIR
+        /
         "index.html"
     )
-
 
     if not index_file.exists():
 
         raise HTTPException(
             status_code=404,
-            detail="Frontend index.html not found."
+            detail="Frontend index.html not found.",
         )
-
 
     return FileResponse(
         index_file
@@ -397,22 +294,21 @@ def home():
 def vamadeva_logo_jpg():
 
     logo_file = (
-        FRONTEND_DIR /
+        FRONTEND_DIR
+        /
         "vamadeva-logo.jpg"
     )
-
 
     if not logo_file.exists():
 
         raise HTTPException(
             status_code=404,
-            detail="Vamadeva logo JPG not found."
+            detail="Vamadeva logo JPG not found.",
         )
-
 
     return FileResponse(
         logo_file,
-        media_type="image/jpeg"
+        media_type="image/jpeg",
     )
 
 
@@ -420,22 +316,21 @@ def vamadeva_logo_jpg():
 def vamadeva_logo_jpeg():
 
     logo_file = (
-        FRONTEND_DIR /
+        FRONTEND_DIR
+        /
         "vamadeva-logo.jpg"
     )
-
 
     if not logo_file.exists():
 
         raise HTTPException(
             status_code=404,
-            detail="Vamadeva logo JPG not found."
+            detail="Vamadeva logo JPG not found.",
         )
-
 
     return FileResponse(
         logo_file,
-        media_type="image/jpeg"
+        media_type="image/jpeg",
     )
 
 
@@ -447,22 +342,21 @@ def vamadeva_logo_jpeg():
 def admin_vamadeva_logo_jpg():
 
     logo_file = (
-        FRONTEND_DIR /
+        FRONTEND_DIR
+        /
         "vamadeva-logo.jpg"
     )
-
 
     if not logo_file.exists():
 
         raise HTTPException(
             status_code=404,
-            detail="Vamadeva logo JPG not found."
+            detail="Vamadeva logo JPG not found.",
         )
-
 
     return FileResponse(
         logo_file,
-        media_type="image/jpeg"
+        media_type="image/jpeg",
     )
 
 
@@ -470,22 +364,21 @@ def admin_vamadeva_logo_jpg():
 def admin_vamadeva_logo_jpeg():
 
     logo_file = (
-        FRONTEND_DIR /
+        FRONTEND_DIR
+        /
         "vamadeva-logo.jpg"
     )
-
 
     if not logo_file.exists():
 
         raise HTTPException(
             status_code=404,
-            detail="Vamadeva logo JPG not found."
+            detail="Vamadeva logo JPG not found.",
         )
-
 
     return FileResponse(
         logo_file,
-        media_type="image/jpeg"
+        media_type="image/jpeg",
     )
 
 
@@ -495,64 +388,97 @@ def admin_vamadeva_logo_jpeg():
 
 @app.post("/chat")
 def chat(
-    request: ChatRequest
+    request: ChatRequest,
 ):
 
     question = (
         request.message.strip()
     )
 
-
     if not question:
 
         return {
             "success": False,
-            "answer":
-                "Please enter a question."
+            "answer": "Please enter a question.",
         }
-
 
     current_course = (
         request.current_course
         or request.course
     )
 
-
     conversation_history = (
         request.conversation_history
         or []
     )
 
-
     try:
 
-        answer = generate_rag_answer(
+        result = generate_rag_answer(
             question,
             current_course,
             conversation_history,
         )
 
+        # ========================================================
+        # IMPORTANT FIX
+        # ========================================================
+        #
+        # generate_rag_answer() returns:
+        #
+        # {
+        #     "answer": "...",
+        #     "course": "Python"
+        # }
+        #
+        # Previously the entire dictionary was placed inside
+        # "answer", which caused the frontend to display:
+        #
+        # [object Object]
+        #
+        # We now return the actual answer string separately.
+        # ========================================================
+
+        if isinstance(result, dict):
+
+            answer_text = result.get(
+                "answer",
+                "",
+            )
+
+            detected_course = result.get(
+                "course",
+                current_course,
+            )
+
+        else:
+
+            answer_text = str(result)
+
+            detected_course = current_course
 
         return {
             "success": True,
-            "answer": answer,
+            "answer": answer_text,
+            "course": detected_course,
         }
-
 
     except Exception as error:
 
         print(
             "[CHAT ERROR]",
-            error
+            error,
         )
-
 
         return JSONResponse(
             status_code=500,
             content={
                 "success": False,
-                "answer":
-                    "I'm sorry, I couldn't process your question right now. Please try again.",
+                "answer": (
+                    "I'm sorry, I couldn't process "
+                    "your question right now. "
+                    "Please try again."
+                ),
             },
         )
 
@@ -563,7 +489,7 @@ def chat(
 
 @app.post("/leads")
 def submit_lead(
-    lead: LeadRequest
+    lead: LeadRequest,
 ):
 
     name = (
@@ -574,18 +500,15 @@ def submit_lead(
         lead.phone.strip()
     )
 
-
     if not name:
 
         return JSONResponse(
             status_code=400,
             content={
                 "success": False,
-                "message":
-                    "Name is required.",
+                "message": "Name is required.",
             },
         )
-
 
     if not phone:
 
@@ -593,11 +516,9 @@ def submit_lead(
             status_code=400,
             content={
                 "success": False,
-                "message":
-                    "Phone number is required.",
+                "message": "Phone number is required.",
             },
         )
-
 
     try:
 
@@ -634,30 +555,30 @@ def submit_lead(
             ),
         )
 
-
         return {
             "success": True,
-            "message":
-                "Your enquiry has been submitted successfully.",
-            "lead_id":
-                lead_id,
+            "message": (
+                "Your enquiry has been "
+                "submitted successfully."
+            ),
+            "lead_id": lead_id,
         }
-
 
     except Exception as error:
 
         print(
             "[LEAD ERROR]",
-            error
+            error,
         )
-
 
         return JSONResponse(
             status_code=500,
             content={
                 "success": False,
-                "message":
-                    "Unable to submit your enquiry right now.",
+                "message": (
+                    "Unable to submit your "
+                    "enquiry right now."
+                ),
             },
         )
 
@@ -668,7 +589,7 @@ def submit_lead(
 
 @app.get("/admin/login")
 def admin_login_page(
-    request: Request
+    request: Request,
 ):
 
     if is_admin_authenticated(
@@ -680,20 +601,18 @@ def admin_login_page(
             status_code=303,
         )
 
-
     login_file = (
-        FRONTEND_DIR /
+        FRONTEND_DIR
+        /
         "admin-login.html"
     )
-
 
     if not login_file.exists():
 
         raise HTTPException(
             status_code=404,
-            detail="admin-login.html not found."
+            detail="admin-login.html not found.",
         )
-
 
     return FileResponse(
         login_file
@@ -707,16 +626,13 @@ def admin_login_page(
 @app.post("/admin/login")
 def admin_login(
     login: AdminLoginRequest,
-    response: JSONResponse = None,
 ):
 
     username = (
         login.username.strip()
     )
 
-
     password = login.password
-
 
     if not ADMIN_PASSWORD:
 
@@ -724,23 +640,22 @@ def admin_login(
             status_code=500,
             content={
                 "success": False,
-                "message":
-                    "Admin password is not configured in .env.",
+                "message": (
+                    "Admin password is not "
+                    "configured in .env."
+                ),
             },
         )
 
-
     username_correct = hmac.compare_digest(
         username,
-        ADMIN_USERNAME
+        ADMIN_USERNAME,
     )
-
 
     password_correct = hmac.compare_digest(
         password,
-        ADMIN_PASSWORD
+        ADMIN_PASSWORD,
     )
-
 
     if not (
         username_correct
@@ -751,41 +666,31 @@ def admin_login(
             status_code=401,
             content={
                 "success": False,
-                "message":
-                    "Invalid username or password.",
+                "message": (
+                    "Invalid username or password."
+                ),
             },
         )
-
 
     token = (
         create_admin_session()
     )
 
-
     result = JSONResponse(
         content={
             "success": True,
-            "message":
-                "Login successful.",
+            "message": "Login successful.",
         }
     )
 
-
     result.set_cookie(
-
         key=ADMIN_COOKIE_NAME,
-
         value=token,
-
         max_age=ADMIN_SESSION_DURATION,
-
         httponly=True,
-
         samesite="lax",
-
         secure=False,
     )
-
 
     return result
 
@@ -800,16 +705,13 @@ def admin_logout():
     result = JSONResponse(
         content={
             "success": True,
-            "message":
-                "Logged out successfully.",
+            "message": "Logged out successfully.",
         }
     )
-
 
     result.delete_cookie(
         key=ADMIN_COOKIE_NAME
     )
-
 
     return result
 
@@ -820,7 +722,7 @@ def admin_logout():
 
 @app.get("/admin")
 def admin_dashboard(
-    request: Request
+    request: Request,
 ):
 
     if not is_admin_authenticated(
@@ -832,20 +734,18 @@ def admin_dashboard(
             status_code=303,
         )
 
-
     admin_file = (
-        FRONTEND_DIR /
+        FRONTEND_DIR
+        /
         "admin.html"
     )
-
 
     if not admin_file.exists():
 
         raise HTTPException(
             status_code=404,
-            detail="admin.html not found."
+            detail="admin.html not found.",
         )
-
 
     return FileResponse(
         admin_file
@@ -858,23 +758,20 @@ def admin_dashboard(
 
 @app.get("/admin/leads")
 def admin_leads(
-    request: Request
+    request: Request,
 ):
 
     auth_error = require_admin(
         request
     )
 
-
     if auth_error:
 
         return auth_error
 
-
     try:
 
         leads = get_leads()
-
 
         return {
             "success": True,
@@ -882,21 +779,20 @@ def admin_leads(
             "leads": leads,
         }
 
-
     except Exception as error:
 
         print(
             "[ADMIN LEADS ERROR]",
-            error
+            error,
         )
-
 
         return JSONResponse(
             status_code=500,
             content={
                 "success": False,
-                "message":
-                    "Unable to load enquiries.",
+                "message": (
+                    "Unable to load enquiries."
+                ),
             },
         )
 
@@ -907,63 +803,59 @@ def admin_leads(
 
 @app.get("/admin/stats")
 def admin_stats(
-    request: Request
+    request: Request,
 ):
 
     auth_error = require_admin(
         request
     )
 
-
     if auth_error:
 
         return auth_error
-
 
     try:
 
         stats = get_lead_stats()
 
-
         return {
             "success": True,
-            "total":
-                stats.get(
-                    "total",
-                    0
-                ),
-            "today":
-                stats.get(
-                    "today",
-                    0
-                ),
-            "this_month":
-                stats.get(
-                    "this_month",
-                    0
-                ),
-            "courses":
-                stats.get(
-                    "courses",
-                    []
-                ),
-        }
 
+            "total": stats.get(
+                "total",
+                0,
+            ),
+
+            "today": stats.get(
+                "today",
+                0,
+            ),
+
+            "this_month": stats.get(
+                "this_month",
+                0,
+            ),
+
+            "courses": stats.get(
+                "courses",
+                [],
+            ),
+        }
 
     except Exception as error:
 
         print(
             "[ADMIN STATS ERROR]",
-            error
+            error,
         )
-
 
         return JSONResponse(
             status_code=500,
             content={
                 "success": False,
-                "message":
-                    "Unable to load statistics.",
+                "message": (
+                    "Unable to load statistics."
+                ),
             },
         )
 
@@ -983,11 +875,9 @@ def admin_calendar(
         request
     )
 
-
     if auth_error:
 
         return auth_error
-
 
     if month < 1 or month > 12:
 
@@ -995,21 +885,21 @@ def admin_calendar(
             status_code=400,
             content={
                 "success": False,
-                "message":
-                    "Month must be between 1 and 12.",
+                "message": (
+                    "Month must be between "
+                    "1 and 12."
+                ),
             },
         )
-
 
     try:
 
         counts = (
             get_monthly_lead_counts(
                 year,
-                month
+                month,
             )
         )
-
 
         return {
             "success": True,
@@ -1018,34 +908,26 @@ def admin_calendar(
             "counts": counts,
         }
 
-
     except Exception as error:
 
         print(
             "[ADMIN CALENDAR ERROR]",
-            error
+            error,
         )
-
 
         return JSONResponse(
             status_code=500,
             content={
                 "success": False,
-                "message":
-                    "Unable to load calendar.",
+                "message": (
+                    "Unable to load calendar."
+                ),
             },
         )
 
 
 # ================================================================
 # ADMIN - LEADS BY DATE
-#
-# IMPORTANT:
-# The frontend sends:
-#
-# /admin/leads/date?selected_date=2026-09-12
-#
-# Therefore the function MUST use selected_date.
 # ================================================================
 
 @app.get("/admin/leads/date")
@@ -1058,11 +940,9 @@ def admin_leads_by_date(
         request
     )
 
-
     if auth_error:
 
         return auth_error
-
 
     if not selected_date:
 
@@ -1070,11 +950,11 @@ def admin_leads_by_date(
             status_code=400,
             content={
                 "success": False,
-                "message":
-                    "Selected date is required.",
+                "message": (
+                    "Selected date is required."
+                ),
             },
         )
-
 
     try:
 
@@ -1082,32 +962,28 @@ def admin_leads_by_date(
             selected_date
         )
 
-
         return {
             "success": True,
-            "date":
-                selected_date,
-            "count":
-                len(leads),
-            "leads":
-                leads,
+            "date": selected_date,
+            "count": len(leads),
+            "leads": leads,
         }
-
 
     except Exception as error:
 
         print(
             "[ADMIN DATE LEADS ERROR]",
-            error
+            error,
         )
-
 
         return JSONResponse(
             status_code=500,
             content={
                 "success": False,
-                "message":
-                    "Unable to load enquiries for the selected date.",
+                "message": (
+                    "Unable to load enquiries "
+                    "for the selected date."
+                ),
             },
         )
 
@@ -1118,7 +994,7 @@ def admin_leads_by_date(
 
 def create_csv_response(
     leads,
-    filename
+    filename,
 ):
 
     output = io.StringIO()
@@ -1126,7 +1002,6 @@ def create_csv_response(
     writer = csv.writer(
         output
     )
-
 
     writer.writerow([
         "ID",
@@ -1142,72 +1017,69 @@ def create_csv_response(
         "Created At",
     ])
 
-
     for lead in leads:
 
         writer.writerow([
 
             lead.get(
                 "id",
-                ""
+                "",
             ),
 
             lead.get(
                 "name",
-                ""
+                "",
             ),
 
             lead.get(
                 "phone",
-                ""
+                "",
             ),
 
             lead.get(
                 "email",
-                ""
+                "",
             ),
 
             lead.get(
                 "qualification",
-                ""
+                "",
             ),
 
             lead.get(
                 "career_goal",
-                ""
+                "",
             ),
 
             lead.get(
                 "experience",
-                ""
+                "",
             ),
 
             lead.get(
                 "course",
-                ""
+                "",
             ),
 
             lead.get(
                 "training_mode",
-                ""
+                "",
             ),
 
             lead.get(
                 "message",
-                ""
+                "",
             ),
 
             lead.get(
                 "created_at",
-                ""
+                "",
             ),
         ])
-
 
     csv_content = (
         output.getvalue()
     )
-
 
     return StreamingResponse(
 
@@ -1217,8 +1089,9 @@ def create_csv_response(
             )
         ),
 
-        media_type=
-            "text/csv; charset=utf-8",
+        media_type=(
+            "text/csv; charset=utf-8"
+        ),
 
         headers={
             "Content-Disposition":
@@ -1233,44 +1106,40 @@ def create_csv_response(
 
 @app.get("/admin/export.csv")
 def admin_export_csv(
-    request: Request
+    request: Request,
 ):
 
     auth_error = require_admin(
         request
     )
 
-
     if auth_error:
 
         return auth_error
-
 
     try:
 
         leads = get_leads()
 
-
         return create_csv_response(
             leads,
-            "vamadeva_all_enquiries.csv"
+            "vamadeva_all_enquiries.csv",
         )
-
 
     except Exception as error:
 
         print(
             "[ADMIN EXPORT ERROR]",
-            error
+            error,
         )
-
 
         return JSONResponse(
             status_code=500,
             content={
                 "success": False,
-                "message":
-                    "Unable to export enquiries.",
+                "message": (
+                    "Unable to export enquiries."
+                ),
             },
         )
 
@@ -1289,11 +1158,9 @@ def admin_export_date_csv(
         request
     )
 
-
     if auth_error:
 
         return auth_error
-
 
     if not selected_date:
 
@@ -1301,11 +1168,11 @@ def admin_export_date_csv(
             status_code=400,
             content={
                 "success": False,
-                "message":
-                    "Selected date is required.",
+                "message": (
+                    "Selected date is required."
+                ),
             },
         )
-
 
     try:
 
@@ -1313,42 +1180,38 @@ def admin_export_date_csv(
             selected_date
         )
 
-
         safe_date = (
-            selected_date
-            .replace(
+            selected_date.replace(
                 "-",
-                ""
+                "",
             )
         )
 
-
         filename = (
-            f"vamadeva_enquiries_"
+            "vamadeva_enquiries_"
             f"{safe_date}.csv"
         )
 
-
         return create_csv_response(
             leads,
-            filename
+            filename,
         )
-
 
     except Exception as error:
 
         print(
             "[ADMIN DATE EXPORT ERROR]",
-            error
+            error,
         )
-
 
         return JSONResponse(
             status_code=500,
             content={
                 "success": False,
-                "message":
-                    "Unable to export selected-date enquiries.",
+                "message": (
+                    "Unable to export "
+                    "selected-date enquiries."
+                ),
             },
         )
 
