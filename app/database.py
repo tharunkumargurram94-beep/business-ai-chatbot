@@ -1,31 +1,156 @@
-import sqlite3
-import re
-from pathlib import Path
+# ================================================================
+# VAMADEVA AI CHATBOT - DATABASE
+# ================================================================
+#
+# Persistent lead storage using Supabase REST API.
+#
+# IMPORTANT:
+# - SUPABASE_URL must be configured in .env / Render
+# - SUPABASE_SERVICE_ROLE_KEY must be configured in .env / Render
+# - The service-role key is SERVER-SIDE ONLY.
+# - Never expose the service-role key in frontend JavaScript.
+#
+# This file keeps backward-compatible function names and return
+# structures so the existing main.py and Admin Dashboard continue
+# to work without UI changes.
+# ================================================================
+
+import os
 from datetime import datetime
+from pathlib import Path
+from collections import Counter
+
+import requests
+from dotenv import load_dotenv
 
 
 # ================================================================
-# PROJECT PATH
+# ENVIRONMENT
 # ================================================================
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-DATABASE_PATH = BASE_DIR / "leads.db"
+load_dotenv(BASE_DIR / ".env")
+
+
+SUPABASE_URL = os.getenv(
+    "SUPABASE_URL",
+    ""
+).strip().rstrip("/")
+
+
+SUPABASE_SERVICE_ROLE_KEY = os.getenv(
+    "SUPABASE_SERVICE_ROLE_KEY",
+    ""
+).strip()
+
+
+TABLE_NAME = "leads"
 
 
 # ================================================================
-# DATABASE CONNECTION
+# SUPABASE CONFIGURATION CHECK
 # ================================================================
 
-def get_connection():
+def _check_supabase_config():
+    """
+    Make sure the Supabase connection settings exist.
+    """
 
-    connection = sqlite3.connect(
-        DATABASE_PATH
+    if not SUPABASE_URL:
+        raise RuntimeError(
+            "SUPABASE_URL is not configured."
+        )
+
+    if not SUPABASE_SERVICE_ROLE_KEY:
+        raise RuntimeError(
+            "SUPABASE_SERVICE_ROLE_KEY is not configured."
+        )
+
+
+# ================================================================
+# SUPABASE HEADERS
+# ================================================================
+
+def _headers():
+    """
+    Headers used for server-side Supabase REST requests.
+    """
+
+    _check_supabase_config()
+
+    return {
+        "apikey": SUPABASE_SERVICE_ROLE_KEY,
+        "Authorization": (
+            f"Bearer {SUPABASE_SERVICE_ROLE_KEY}"
+        ),
+        "Content-Type": "application/json",
+    }
+
+
+# ================================================================
+# SUPABASE TABLE URL
+# ================================================================
+
+def _table_url():
+    """
+    Return the REST endpoint for the leads table.
+    """
+
+    _check_supabase_config()
+
+    return (
+        f"{SUPABASE_URL}"
+        f"/rest/v1/{TABLE_NAME}"
     )
 
-    connection.row_factory = sqlite3.Row
 
-    return connection
+# ================================================================
+# GENERIC SUPABASE REQUEST
+# ================================================================
+
+def _request(
+    method,
+    url=None,
+    params=None,
+    json_data=None,
+    timeout=30,
+):
+    """
+    Perform a Supabase REST request with useful error messages.
+    """
+
+    if url is None:
+        url = _table_url()
+
+    response = requests.request(
+        method=method,
+        url=url,
+        headers=_headers(),
+        params=params,
+        json=json_data,
+        timeout=timeout,
+    )
+
+    if not response.ok:
+        try:
+            error_body = response.json()
+        except Exception:
+            error_body = response.text
+
+        raise RuntimeError(
+            f"Supabase request failed "
+            f"({response.status_code}): "
+            f"{error_body}"
+        )
+
+    if not response.text.strip():
+        return None
+
+    try:
+        return response.json()
+    except Exception:
+        return response.text
 
 
 # ================================================================
@@ -33,585 +158,66 @@ def get_connection():
 # ================================================================
 
 def initialize_database():
+    """
+    Supabase tables are created from the Supabase SQL Editor.
 
-    connection = get_connection()
+    This function intentionally does not attempt to create tables
+    automatically because database schema creation should remain
+    controlled from Supabase.
+    """
 
-    cursor = connection.cursor()
+    _check_supabase_config()
 
-
-    # ------------------------------------------------------------
-    # CREATE TABLE
-    # ------------------------------------------------------------
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS leads (
-
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-            name TEXT NOT NULL,
-
-            phone TEXT NOT NULL,
-
-            email TEXT,
-
-            qualification TEXT,
-
-            career_goal TEXT,
-
-            experience TEXT,
-
-            course TEXT,
-
-            training_mode TEXT,
-
-            message TEXT,
-
-            created_at TEXT NOT NULL
-
-        )
-    """)
-
-
-    # ------------------------------------------------------------
-    # CHECK EXISTING COLUMNS
-    # ------------------------------------------------------------
-
-    cursor.execute(
-        "PRAGMA table_info(leads)"
-    )
-
-
-    existing_columns = {
-        row["name"]
-        for row in cursor.fetchall()
-    }
-
-
-    required_columns = {
-
-        "qualification":
-            "TEXT",
-
-        "career_goal":
-            "TEXT",
-
-        "experience":
-            "TEXT",
-
-        "course":
-            "TEXT",
-
-        "training_mode":
-            "TEXT",
-
-        "message":
-            "TEXT",
-
-        "created_at":
-            "TEXT",
-
-    }
-
-
-    # ------------------------------------------------------------
-    # ADD MISSING COLUMNS
-    # ------------------------------------------------------------
-
-    for column, column_type in required_columns.items():
-
-        if column not in existing_columns:
-
-            cursor.execute(
-                f"""
-                ALTER TABLE leads
-                ADD COLUMN {column}
-                {column_type}
-                """
-            )
-
-
-    connection.commit()
-
-
-    # ------------------------------------------------------------
-    # MIGRATE OLD COMBINED MESSAGES
-    # ------------------------------------------------------------
-
-    migrate_combined_messages(
-        connection
-    )
-
-
-    connection.close()
+    return True
 
 
 # ================================================================
-# PARSE OLD COMBINED MESSAGE
+# NORMALIZE LEAD
 # ================================================================
 
-def parse_combined_message(
-    message
-):
-
+def _normalize_lead(lead):
     """
-    Converts an old combined message such as:
-
-        Qualification:
-        btech
-
-        Career Goal:
-        getting into IT
-
-        Additional Message:
-        both
-
-    into:
-
-        qualification = btech
-        career_goal   = getting into IT
-        message       = both
+    Keep the lead structure compatible with the existing
+    application and Admin Dashboard.
     """
 
-
-    if not message:
-
-        return {
-            "qualification": None,
-            "career_goal": None,
-            "message": message,
-        }
-
-
-    text = str(
-        message
-    ).strip()
-
-
-    # ------------------------------------------------------------
-    # Check whether this is actually a combined message
-    # ------------------------------------------------------------
-
-    has_qualification = (
-        re.search(
-            r"Qualification\s*:",
-            text,
-            re.IGNORECASE
-        )
-        is not None
-    )
-
-
-    has_career_goal = (
-        re.search(
-            r"Career\s*Goal\s*:",
-            text,
-            re.IGNORECASE
-        )
-        is not None
-    )
-
-
-    has_additional_message = (
-        re.search(
-            r"Additional\s*Message\s*:",
-            text,
-            re.IGNORECASE
-        )
-        is not None
-    )
-
-
-    if not (
-        has_qualification
-        or
-        has_career_goal
-        or
-        has_additional_message
-    ):
-
-        return {
-            "qualification": None,
-            "career_goal": None,
-            "message": message,
-        }
-
-
-    # ------------------------------------------------------------
-    # Extract qualification
-    # ------------------------------------------------------------
-
-    qualification_match = re.search(
-        r"Qualification\s*:\s*(.*?)(?=\n\s*Career\s*Goal\s*:|\n\s*Additional\s*Message\s*:|$)",
-        text,
-        re.IGNORECASE | re.DOTALL
-    )
-
-
-    qualification = None
-
-
-    if qualification_match:
-
-        qualification = (
-            qualification_match
-            .group(1)
-            .strip()
-        )
-
-
-    # ------------------------------------------------------------
-    # Extract career goal
-    # ------------------------------------------------------------
-
-    career_goal_match = re.search(
-        r"Career\s*Goal\s*:\s*(.*?)(?=\n\s*Additional\s*Message\s*:|$)",
-        text,
-        re.IGNORECASE | re.DOTALL
-    )
-
-
-    career_goal = None
-
-
-    if career_goal_match:
-
-        career_goal = (
-            career_goal_match
-            .group(1)
-            .strip()
-        )
-
-
-    # ------------------------------------------------------------
-    # Extract additional message
-    # ------------------------------------------------------------
-
-    additional_message_match = re.search(
-        r"Additional\s*Message\s*:\s*(.*)$",
-        text,
-        re.IGNORECASE | re.DOTALL
-    )
-
-
-    additional_message = None
-
-
-    if additional_message_match:
-
-        additional_message = (
-            additional_message_match
-            .group(1)
-            .strip()
-        )
-
-
-    # ------------------------------------------------------------
-    # Clean empty values
-    # ------------------------------------------------------------
-
-    if qualification == "":
-        qualification = None
-
-
-    if career_goal == "":
-        career_goal = None
-
-
-    if additional_message == "":
-        additional_message = None
-
+    if not isinstance(lead, dict):
+        return {}
 
     return {
-
-        "qualification":
-            qualification,
-
-        "career_goal":
-            career_goal,
-
-        "message":
-            additional_message,
-
+        "id": lead.get("id"),
+        "name": lead.get("name") or "",
+        "phone": lead.get("phone") or "",
+        "email": lead.get("email"),
+        "qualification": (
+            lead.get("qualification")
+            or ""
+        ),
+        "career_goal": (
+            lead.get("career_goal")
+            or ""
+        ),
+        "experience": (
+            lead.get("experience")
+            or ""
+        ),
+        "course": (
+            lead.get("course")
+            or ""
+        ),
+        "training_mode": (
+            lead.get("training_mode")
+            or ""
+        ),
+        "message": (
+            lead.get("message")
+            or ""
+        ),
+        "created_at": (
+            lead.get("created_at")
+            or ""
+        ),
     }
-
-
-# ================================================================
-# MIGRATE EXISTING COMBINED MESSAGES
-# ================================================================
-
-def migrate_combined_messages(
-    connection
-):
-
-    cursor = connection.cursor()
-
-
-    cursor.execute("""
-        SELECT
-            id,
-            qualification,
-            career_goal,
-            message
-        FROM leads
-        WHERE message IS NOT NULL
-          AND (
-              message LIKE '%Qualification:%'
-              OR
-              message LIKE '%Career Goal:%'
-              OR
-              message LIKE '%Additional Message:%'
-          )
-    """)
-
-
-    rows = cursor.fetchall()
-
-
-    migrated_count = 0
-
-
-    for row in rows:
-
-        parsed = parse_combined_message(
-            row["message"]
-        )
-
-
-        new_qualification = (
-            row["qualification"]
-            or
-            parsed["qualification"]
-        )
-
-
-        new_career_goal = (
-            row["career_goal"]
-            or
-            parsed["career_goal"]
-        )
-
-
-        # If the message contains the structured
-        # fields, replace the combined message
-        # with only the additional message.
-
-        new_message = (
-            parsed["message"]
-        )
-
-
-        # --------------------------------------------------------
-        # Only update when something actually changed
-        # --------------------------------------------------------
-
-        if (
-            new_qualification
-            != row["qualification"]
-            or
-            new_career_goal
-            != row["career_goal"]
-            or
-            new_message
-            != row["message"]
-        ):
-
-            cursor.execute(
-                """
-                UPDATE leads
-                SET
-                    qualification = ?,
-                    career_goal = ?,
-                    message = ?
-                WHERE id = ?
-                """,
-                (
-                    new_qualification,
-                    new_career_goal,
-                    new_message,
-                    row["id"],
-                )
-            )
-
-
-            migrated_count += 1
-
-
-    connection.commit()
-
-
-    if migrated_count > 0:
-
-        print(
-            f"[DATABASE] Migrated "
-            f"{migrated_count} combined lead(s)."
-        )
-
-
-# ================================================================
-# CREATE LEAD
-# ================================================================
-
-def create_lead(
-
-    name,
-
-    phone,
-
-    email=None,
-
-    qualification=None,
-
-    career_goal=None,
-
-    experience=None,
-
-    course=None,
-
-    training_mode=None,
-
-    message=None,
-
-):
-
-    # ------------------------------------------------------------
-    # If the frontend sends the old combined message format,
-    # automatically separate the fields.
-    # ------------------------------------------------------------
-
-    parsed = parse_combined_message(
-        message
-    )
-
-
-    if not qualification:
-
-        qualification = (
-            parsed["qualification"]
-            or
-            qualification
-        )
-
-
-    if not career_goal:
-
-        career_goal = (
-            parsed["career_goal"]
-            or
-            career_goal
-        )
-
-
-    # If the message was combined,
-    # store only the additional message.
-
-    if (
-        parsed["qualification"]
-        is not None
-        or
-        parsed["career_goal"]
-        is not None
-        or
-        re.search(
-            r"Additional\s*Message\s*:",
-            str(message or ""),
-            re.IGNORECASE
-        )
-    ):
-
-        message = (
-            parsed["message"]
-        )
-
-
-    connection = get_connection()
-
-    cursor = connection.cursor()
-
-
-    created_at = (
-        datetime.now()
-        .isoformat(
-            timespec="seconds"
-        )
-    )
-
-
-    cursor.execute(
-        """
-        INSERT INTO leads (
-
-            name,
-
-            phone,
-
-            email,
-
-            qualification,
-
-            career_goal,
-
-            experience,
-
-            course,
-
-            training_mode,
-
-            message,
-
-            created_at
-
-        )
-
-        VALUES (
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            ?,
-            ?
-        )
-        """,
-        (
-
-            name,
-
-            phone,
-
-            email,
-
-            qualification,
-
-            career_goal,
-
-            experience,
-
-            course,
-
-            training_mode,
-
-            message,
-
-            created_at,
-
-        )
-    )
-
-
-    lead_id = (
-        cursor.lastrowid
-    )
-
-
-    connection.commit()
-
-    connection.close()
-
-
-    return lead_id
 
 
 # ================================================================
@@ -619,55 +225,130 @@ def create_lead(
 # ================================================================
 
 def get_leads():
+    """
+    Return all leads ordered newest first.
+    """
 
-    connection = get_connection()
+    data = _request(
+        "GET",
+        params={
+            "select": "*",
+            "order": "id.desc",
+        },
+    )
 
-    cursor = connection.cursor()
+    if not data:
+        return []
+
+    return [
+        _normalize_lead(lead)
+        for lead in data
+    ]
 
 
-    cursor.execute(
-        """
-        SELECT
+# ================================================================
+# GET SINGLE LEAD
+# ================================================================
 
-            id,
+def get_lead(lead_id):
+    """
+    Return one lead by ID.
+    """
 
-            name,
+    data = _request(
+        "GET",
+        params={
+            "select": "*",
+            "id": f"eq.{lead_id}",
+            "limit": "1",
+        },
+    )
 
-            phone,
+    if not data:
+        return None
 
-            email,
-
-            qualification,
-
-            career_goal,
-
-            experience,
-
-            course,
-
-            training_mode,
-
-            message,
-
-            created_at
-
-        FROM leads
-
-        ORDER BY id DESC
-        """
+    return _normalize_lead(
+        data[0]
     )
 
 
-    rows = cursor.fetchall()
+# ================================================================
+# CREATE LEAD
+# ================================================================
 
+def create_lead(
+    name,
+    phone,
+    email=None,
+    qualification=None,
+    career_goal=None,
+    experience=None,
+    course=None,
+    training_mode=None,
+    message=None,
+):
+    """
+    Create a new enquiry/lead in Supabase.
 
-    connection.close()
+    Returns:
+        int/str: newly created lead ID
+    """
 
+    created_at = datetime.now().strftime(
+        "%Y-%m-%dT%H:%M:%S"
+    )
 
-    return [
-        dict(row)
-        for row in rows
-    ]
+    payload = {
+        "name": name,
+        "phone": phone,
+        "email": email,
+        "qualification": qualification,
+        "career_goal": career_goal,
+        "experience": experience,
+        "course": course,
+        "training_mode": training_mode,
+        "message": message,
+        "created_at": created_at,
+    }
+
+    headers = _headers()
+
+    headers["Prefer"] = (
+        "return=representation"
+    )
+
+    response = requests.post(
+        _table_url(),
+        headers=headers,
+        json=payload,
+        timeout=30,
+    )
+
+    if not response.ok:
+        try:
+            error_body = response.json()
+        except Exception:
+            error_body = response.text
+
+        raise RuntimeError(
+            f"Unable to create lead "
+            f"({response.status_code}): "
+            f"{error_body}"
+        )
+
+    result = response.json()
+
+    if not result:
+        raise RuntimeError(
+            "Supabase created the lead but "
+            "did not return the lead ID."
+        )
+
+    created_lead = result[0]
+
+    return created_lead.get(
+        "id"
+    )
 
 
 # ================================================================
@@ -675,136 +356,89 @@ def get_leads():
 # ================================================================
 
 def get_lead_stats():
+    """
+    Return statistics in the exact structure expected by
+    the existing main.py.
 
-    connection = get_connection()
+    Expected structure:
 
-    cursor = connection.cursor()
+    {
+        "total": 4,
+        "today": 1,
+        "this_month": 4,
+        "courses": [
+            {
+                "course": "Snowflake",
+                "count": 2
+            }
+        ]
+    }
+    """
 
+    leads = get_leads()
 
-    # ------------------------------------------------------------
-    # TOTAL
-    # ------------------------------------------------------------
+    now = datetime.now()
 
-    cursor.execute(
-        """
-        SELECT COUNT(*) AS total
-        FROM leads
-        """
+    today_string = now.strftime(
+        "%Y-%m-%d"
     )
 
-
-    total = (
-        cursor.fetchone()["total"]
+    month_string = now.strftime(
+        "%Y-%m"
     )
 
+    today_count = 0
+    month_count = 0
 
-    # ------------------------------------------------------------
-    # TODAY
-    # ------------------------------------------------------------
+    course_counter = Counter()
 
-    cursor.execute(
-        """
-        SELECT COUNT(*) AS today
-        FROM leads
-        WHERE date(created_at)
-            =
-            date('now', 'localtime')
-        """
-    )
+    for lead in leads:
 
-
-    today = (
-        cursor.fetchone()["today"]
-    )
-
-
-    # ------------------------------------------------------------
-    # THIS MONTH
-    # ------------------------------------------------------------
-
-    cursor.execute(
-        """
-        SELECT COUNT(*) AS this_month
-        FROM leads
-        WHERE strftime(
-            '%Y-%m',
-            created_at
+        created_at = str(
+            lead.get(
+                "created_at",
+                ""
+            )
         )
-        =
-        strftime(
-            '%Y-%m',
-            'now',
-            'localtime'
+
+        if created_at.startswith(
+            today_string
+        ):
+            today_count += 1
+
+        if created_at.startswith(
+            month_string
+        ):
+            month_count += 1
+
+        course = str(
+            lead.get(
+                "course",
+                ""
+            )
+        ).strip()
+
+        if course:
+            course_counter[
+                course
+            ] += 1
+
+    courses = []
+
+    for course, count in course_counter.most_common():
+
+        courses.append(
+            {
+                "course": course,
+                "count": count,
+            }
         )
-        """
-    )
-
-
-    this_month = (
-        cursor.fetchone()["this_month"]
-    )
-
-
-    # ------------------------------------------------------------
-    # COURSE COUNTS
-    # ------------------------------------------------------------
-
-    cursor.execute(
-        """
-        SELECT
-
-            course,
-
-            COUNT(*) AS count
-
-        FROM leads
-
-        WHERE course IS NOT NULL
-
-          AND TRIM(course) != ''
-
-        GROUP BY course
-
-        ORDER BY count DESC
-        """
-    )
-
-
-    course_rows = (
-        cursor.fetchall()
-    )
-
-
-    connection.close()
-
 
     return {
-
-        "total":
-            total,
-
-        "today":
-            today,
-
-        "this_month":
-            this_month,
-
-        "courses": [
-
-            {
-
-                "course":
-                    row["course"],
-
-                "count":
-                    row["count"],
-
-            }
-
-            for row in course_rows
-
-        ],
-
+        "total": len(leads),
+        "today": today_count,
+        "this_month": month_count,
+        "courses": courses,
     }
 
 
@@ -814,73 +448,57 @@ def get_lead_stats():
 
 def get_monthly_lead_counts(
     year,
-    month
+    month,
 ):
+    """
+    Return daily lead counts for a specific month.
 
-    connection = get_connection()
+    This is used by the Admin Dashboard calendar.
 
-    cursor = connection.cursor()
+    Example:
 
+    {
+        "2026-09-01": 0,
+        "2026-09-02": 2,
+        "2026-09-03": 1
+    }
+    """
 
-    cursor.execute(
-        """
-        SELECT
+    leads = get_leads()
 
-            CAST(
-                strftime(
-                    '%d',
-                    created_at
-                )
-                AS INTEGER
-            ) AS day,
-
-            COUNT(*) AS count
-
-        FROM leads
-
-        WHERE
-            strftime(
-                '%Y',
-                created_at
-            )
-            = ?
-
-          AND
-            strftime(
-                '%m',
-                created_at
-            )
-            = ?
-
-        GROUP BY
-            strftime(
-                '%d',
-                created_at
-            )
-
-        ORDER BY day
-        """,
-        (
-            str(year),
-            f"{month:02d}",
-        )
+    prefix = (
+        f"{int(year):04d}-"
+        f"{int(month):02d}-"
     )
 
+    counts = {}
 
-    rows = cursor.fetchall()
+    for lead in leads:
 
+        created_at = str(
+            lead.get(
+                "created_at",
+                ""
+            )
+        )
 
-    connection.close()
+        if not created_at.startswith(
+            prefix
+        ):
+            continue
 
+        date_part = (
+            created_at[:10]
+        )
 
-    return {
+        counts[date_part] = (
+            counts.get(
+                date_part,
+                0
+            ) + 1
+        )
 
-        row["day"]:
-            row["count"]
-
-        for row in rows
-
-    }
+    return counts
 
 
 # ================================================================
@@ -890,58 +508,299 @@ def get_monthly_lead_counts(
 def get_leads_by_date(
     selected_date
 ):
+    """
+    Return all leads for a specific date.
 
-    connection = get_connection()
+    selected_date format:
 
-    cursor = connection.cursor()
+        YYYY-MM-DD
 
+    Example:
 
-    cursor.execute(
-        """
-        SELECT
+        2026-09-12
+    """
 
-            id,
+    selected_date = str(
+        selected_date
+    ).strip()
 
-            name,
+    if not selected_date:
+        return []
 
-            phone,
+    leads = get_leads()
 
-            email,
+    matching_leads = []
 
-            qualification,
+    for lead in leads:
 
-            career_goal,
-
-            experience,
-
-            course,
-
-            training_mode,
-
-            message,
-
-            created_at
-
-        FROM leads
-
-        WHERE date(created_at)
-            = ?
-
-        ORDER BY id DESC
-        """,
-        (
-            selected_date,
+        created_at = str(
+            lead.get(
+                "created_at",
+                ""
+            )
         )
-    )
+
+        if created_at.startswith(
+            selected_date
+        ):
+            matching_leads.append(
+                lead
+            )
+
+    return matching_leads
 
 
-    rows = cursor.fetchall()
+# ================================================================
+# GET LEADS BY COURSE
+# ================================================================
 
+def get_leads_by_course(
+    course
+):
+    """
+    Return leads matching a course.
+    """
 
-    connection.close()
+    course = str(
+        course
+    ).strip().lower()
 
+    if not course:
+        return []
+
+    leads = get_leads()
 
     return [
-        dict(row)
-        for row in rows
+        lead
+        for lead in leads
+        if str(
+            lead.get(
+                "course",
+                ""
+            )
+        ).strip().lower()
+        == course
     ]
+
+
+# ================================================================
+# GET LEADS BY TRAINING MODE
+# ================================================================
+
+def get_leads_by_training_mode(
+    training_mode
+):
+    """
+    Return leads matching a training mode.
+    """
+
+    training_mode = str(
+        training_mode
+    ).strip().lower()
+
+    if not training_mode:
+        return []
+
+    leads = get_leads()
+
+    return [
+        lead
+        for lead in leads
+        if str(
+            lead.get(
+                "training_mode",
+                ""
+            )
+        ).strip().lower()
+        == training_mode
+    ]
+
+
+# ================================================================
+# GET COURSE COUNTS
+# ================================================================
+
+def get_course_counts():
+    """
+    Return course counts as a dictionary.
+
+    Example:
+
+    {
+        "Snowflake": 2,
+        "Power BI": 1
+    }
+    """
+
+    leads = get_leads()
+
+    counter = Counter()
+
+    for lead in leads:
+
+        course = str(
+            lead.get(
+                "course",
+                ""
+            )
+        ).strip()
+
+        if course:
+            counter[course] += 1
+
+    return dict(counter)
+
+
+# ================================================================
+# GET TRAINING MODE COUNTS
+# ================================================================
+
+def get_training_mode_counts():
+    """
+    Return training mode counts as a dictionary.
+    """
+
+    leads = get_leads()
+
+    counter = Counter()
+
+    for lead in leads:
+
+        mode = str(
+            lead.get(
+                "training_mode",
+                ""
+            )
+        ).strip()
+
+        if mode:
+            counter[mode] += 1
+
+    return dict(counter)
+
+
+# ================================================================
+# DATABASE HEALTH CHECK
+# ================================================================
+
+def database_health_check():
+    """
+    Verify that the application can communicate with Supabase.
+    """
+
+    try:
+
+        data = _request(
+            "GET",
+            params={
+                "select": "id",
+                "limit": "1",
+            },
+        )
+
+        return {
+            "success": True,
+            "connected": True,
+            "records_available": (
+                len(data)
+                if isinstance(
+                    data,
+                    list
+                )
+                else 0
+            ),
+        }
+
+    except Exception as error:
+
+        return {
+            "success": False,
+            "connected": False,
+            "error": str(error),
+        }
+
+
+# ================================================================
+# BACKWARD-COMPATIBILITY ALIASES
+# ================================================================
+
+def get_all_leads():
+    """
+    Backward-compatible alias.
+    """
+
+    return get_leads()
+
+
+def get_stats():
+    """
+    Backward-compatible alias.
+    """
+
+    return get_lead_stats()
+
+
+# ================================================================
+# LOCAL TEST
+# ================================================================
+
+if __name__ == "__main__":
+
+    print(
+        "\n========================================"
+    )
+
+    print(
+        "VAMADEVA DATABASE TEST"
+    )
+
+    print(
+        "========================================\n"
+    )
+
+    try:
+
+        health = database_health_check()
+
+        print(
+            "Supabase connection:"
+        )
+
+        print(
+            health
+        )
+
+        print()
+
+        leads = get_leads()
+
+        print(
+            "Total leads:",
+            len(leads)
+        )
+
+        print()
+
+        stats = get_lead_stats()
+
+        print(
+            "Statistics:"
+        )
+
+        print(
+            stats
+        )
+
+        print(
+            "\n========================================\n"
+        )
+
+    except Exception as error:
+
+        print(
+            "DATABASE ERROR:"
+        )
+
+        print(
+            error
+        )
